@@ -1,0 +1,1 @@
+// Schema pendiente — definir en tarea D2
