@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - dev  # <-- AHORA GITHUB ESCUCHARÁ TU RAMA DEV
   pull_request:
     branches:
       - main
@@ -27,11 +28,21 @@ jobs:
       - name: Build
         run: npm run build
 
+      # DETECTA AUTOMÁTICAMENTE LA RAMA Y CONFIGURA EL COMANDO CORRECTO
+      - name: Determine Environment Flag
+        id: env-selector
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "FLAG=" >> $GITHUB_OUTPUT
+          else
+            echo "FLAG=--env preview" >> $GITHUB_OUTPUT
+          fi
+
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy
+          command: deploy ${{ steps.env-selector.outputs.FLAG }}
         env:
           NODE_ENV: production
