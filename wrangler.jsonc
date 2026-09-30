@@ -19,28 +19,33 @@
 		"enabled": true
 	},
 	"upload_source_maps": true,
+	
+	// 1. BASE DE DATOS DE PRODUCCIÓN (¡Asegúrate de mantener el ID viejo aquí!)
 	"d1_databases": [
 		{
 			"binding": "cafe_cabra_agenda_db",
 			"database_name": "cafe-cabra-agenda-db",
-			"database_id": "696def05-b2dd-47aa-b259-a326b3404729"
+			"database_id": "696def05-b2dd-47aa-b259-a326b3404729" 
 		}
 	],
-		//Configuración para el entorno de desarrollo
 	
+	// 2. CONFIGURACIÓN DEL ENTORNO DEV
 	"env": {
-		"staging": { // <-- Cambiado de "preview" a "staging"
+		"staging": {
 			"name": "usach-pingeso-cafecabra-agenda-dev",
 			"d1_databases": [
 				{
-					"binding": "cafe_cabra_agenda_db",
-					"database_name": "cafe-cabra-agenda-db",
-					"database_id": "696def05-b2dd-47aa-b259-a326b3404729"
+					// Mantenemos el mismo binding "cafe_cabra_agenda_db" para que el código 
+					// use la base de datos de dev sin necesidad de cambiar tus archivos .js/.ts
+					"binding": "cafe_cabra_agenda_db", 
+					"database_name": "cafe-cabra-agenda-db-dev",
+					"database_id": "bb597bc4-21dd-4558-a27a-a0e9f311eaf1"
 				}
 			]
 		}
-
 	}
+
+
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
