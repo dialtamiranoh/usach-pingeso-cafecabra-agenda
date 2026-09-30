@@ -23,8 +23,9 @@ export async function POST(request: NextRequest) {
     console.log("=== CORREO RECIBIDO ===");
     console.log("De:", email.from);
     console.log("Asunto:", email.subject);
-    console.log("Texto:", email.text);
-    console.log("HTML:", email.html);
+    console.log("--- HTML O TEXTO PLANO ---");
+    console.log(email.html ? email.html : email.text);
+    console.log("--- FIN ---");
 
     // 5. Por ahora solo loguear — sin base de datos todavía
     return NextResponse.json({ ok: true }, { status: 200 });
