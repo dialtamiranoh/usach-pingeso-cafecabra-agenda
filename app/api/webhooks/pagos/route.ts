@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Resend } from "resend";
 import { convert } from "html-to-text";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,28 +18,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    const email = payload.data;
-    const emailId = email.email_id;
+    const emailId = payload.data.email_id;
 
-    const resendResponse = await fetch(`https://api.resend.com/emails/${emailId}`, {
-      headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      },
-    });
+    // Obtener contenido completo del correo inbound
+    const { data: fullEmail, error } = await (resend.emails as any).receiving.get(emailId);
 
-    if (!resendResponse.ok) {
-      console.error("Error obteniendo correo de Resend:", resendResponse.status);
+    if (error || !fullEmail) {
+      console.error("Error obteniendo correo:", error);
       return NextResponse.json({ error: "Error obteniendo correo" }, { status: 500 });
     }
 
-    const fullEmail = await resendResponse.json() as {
-      from: string;
-      subject: string;
-      text: string | null;
-      html: string | null;
-    };
-
-    // Usar texto plano si existe, sino extraer del HTML
+    // Extraer contenido como texto plano
     const contenido = fullEmail.text ??
       (fullEmail.html ? convert(fullEmail.html, { wordwrap: false }) : "");
 
