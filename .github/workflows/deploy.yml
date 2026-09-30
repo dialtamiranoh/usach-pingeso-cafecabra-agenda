@@ -25,32 +25,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # DETECTA LA RAMA CORRESPONDIENTE
-      - name: Determine Environment
-        id: env-selector
-        run: |
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            echo "ENV_NAME=production" >> $GITHUB_OUTPUT
-            echo "FLAG=" >> $GITHUB_OUTPUT
-          else
-            echo "ENV_NAME=staging" >> $GITHUB_OUTPUT
-            echo "FLAG=--env staging" >> $GITHUB_OUTPUT
-          fi
-
-      # PASA EL ENTORNO DIRECTAMENTE A VINEXT DURANTE LA COMPILACIÓN
       - name: Build
         run: npm run build
-        env:
-          CLOUDFLARE_ENV: ${{ steps.env-selector.outputs.ENV_NAME }}
-          NODE_ENV: production
 
-      # SUEBE EL ENTORNO DE FORMA EXPLÍCITA CON LA BANDERA --ENV
-      - name: Deploy to Cloudflare
+      - name: Deploy to Cloudflare (production)
+        if: github.ref == 'refs/heads/main'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy ${{ steps.env-selector.outputs.FLAG }}
-        env:
-          CLOUDFLARE_ENV: ${{ steps.env-selector.outputs.ENV_NAME }}
-          NODE_ENV: production
+          command: deploy
+
+      - name: Deploy to Cloudflare (staging)
+        if: github.ref == 'refs/heads/dev'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --env staging
