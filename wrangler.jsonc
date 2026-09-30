@@ -27,10 +27,19 @@
 		}
 	],
 		//Configuración para el entorno de desarrollo
+	
 	"env": {
-		"preview": {
-			"name": "usach-pingeso-cafecabra-agenda-dev"
+		"staging": { // <-- Cambiado de "preview" a "staging"
+			"name": "usach-pingeso-cafecabra-agenda-dev",
+			"d1_databases": [
+				{
+					"binding": "cafe_cabra_agenda_db",
+					"database_name": "cafe-cabra-agenda-db",
+					"database_id": "696def05-b2dd-47aa-b259-a326b3404729"
+				}
+			]
 		}
+
 	}
 	/**
 	 * Smart Placement
