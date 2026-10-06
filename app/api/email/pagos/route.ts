@@ -22,6 +22,15 @@ export async function POST(request: NextRequest) {
     const parsed = await simpleParser(Buffer.from(rawEmail));
     const contenido = parsed.text ?? (parsed.html ? convert(parsed.html, { wordwrap: false }) : "");
 
+    const contenidoEscapado = contenido
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    const contenidoHtml = contenidoEscapado.trim()
+      ? `<pre style="background-color: #f8fafc; padding: 12px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 13px;">${contenidoEscapado}</pre>`
+      : `<p style="color:#94a3b8;font-size:13px;font-style:italic;">Sin contenido de texto en el correo original.</p>`;
+
     const senderEmail = parsed.from?.value[0]?.address || fromHeader;
     const senderName = parsed.from?.value[0]?.name || "Cliente";
     const asunto = parsed.subject || "Comprobante de Pago";
@@ -29,7 +38,7 @@ export async function POST(request: NextRequest) {
     console.log("=== CORREO RECIBIDO VIA CLOUDFLARE EMAIL ROUTING ===");
     console.log("De:", senderEmail);
     console.log("Asunto:", asunto);
-    
+
     const allAttachments = parsed.attachments ?? [];
 
     const attachmentPlaceholder = allAttachments.length > 0
@@ -56,14 +65,14 @@ export async function POST(request: NextRequest) {
             <p><strong>Remitente:</strong> ${senderName} (${senderEmail})</p>
             <p><strong>Asunto:</strong> ${asunto}</p>
             <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 16px 0;" />
-            <pre style="background-color: #f8fafc; padding: 12px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 13px;">${contenido}</pre>
+            ${contenidoHtml}
             ${attachmentPlaceholder}
           </div>
         `,
-        attachments: parsed.attachments?.map(att => ({
+        attachments: allAttachments.map(att => ({
           filename: att.filename ?? 'adjunto',
           content: att.content,
-        })) ?? [],
+        })),
       })
     );
 
