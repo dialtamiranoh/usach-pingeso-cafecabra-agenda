@@ -62,6 +62,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+
+    // Construir preview de adjuntos para mostrar en el template
+    const imageAttachments = parsed.attachments?.filter(att => 
+      att.contentType.startsWith('image/')
+    ) ?? [];
+
+    const imagesHtml = imageAttachments.map(att => {
+      const base64 = att.content.toString('base64');
+      return `<img src="data:${att.contentType};base64,${base64}" 
+        style="max-width:100%;border-radius:6px;margin-top:12px;" />`;
+    }).join('');
+
     // 2. Notificación al ADMIN (Enviado a reservas@cafecabra.cl para que Cloudflare lo redirija)
     emailTasks.push(
       resend.emails.send({
@@ -74,16 +86,19 @@ export async function POST(request: NextRequest) {
             <p><strong>Remitente:</strong> ${senderName} (${senderEmail})</p>
             <p><strong>Asunto:</strong> ${asunto}</p>
             <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 16px 0;" />
-            ${parsed.html 
-              ? `<div>${parsed.html}</div>` 
+            ${parsed.html
+              ? `<div>${parsed.html}</div>`
               : `<pre style="background-color: #f8fafc; padding: 12px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 13px;">${contenido}</pre>`
             }
+            ${imagesHtml}
           </div>
         `,
-        attachments: parsed.attachments?.map(att => ({
-          filename: att.filename ?? 'adjunto',
-          content: att.content,
-        })) ?? [],
+        attachments: parsed.attachments
+          ?.filter(att => !att.contentType.startsWith('image/'))
+          .map(att => ({
+            filename: att.filename ?? 'adjunto',
+            content: att.content,
+          })) ?? [],
       })
     );
 
