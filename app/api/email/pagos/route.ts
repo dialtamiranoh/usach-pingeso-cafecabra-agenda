@@ -74,10 +74,16 @@ export async function POST(request: NextRequest) {
             <p><strong>Remitente:</strong> ${senderName} (${senderEmail})</p>
             <p><strong>Asunto:</strong> ${asunto}</p>
             <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 16px 0;" />
-            <p><strong>Detalles / Texto extraído del correo:</strong></p>
-            <pre style="background-color: #f8fafc; padding: 12px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 13px;">${contenido}</pre>
+            ${parsed.html 
+              ? `<div>${parsed.html}</div>` 
+              : `<pre style="background-color: #f8fafc; padding: 12px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 13px;">${contenido}</pre>`
+            }
           </div>
         `,
+        attachments: parsed.attachments?.map(att => ({
+          filename: att.filename ?? 'adjunto',
+          content: att.content,
+        })) ?? [],
       })
     );
 
