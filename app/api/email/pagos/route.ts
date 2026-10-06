@@ -29,16 +29,14 @@ export async function POST(request: NextRequest) {
     console.log("=== CORREO RECIBIDO VIA CLOUDFLARE EMAIL ROUTING ===");
     console.log("De:", senderEmail);
     console.log("Asunto:", asunto);
+    
+    const allAttachments = parsed.attachments ?? [];
 
-    const imageAttachments = parsed.attachments?.filter(att =>
-      att.contentType.startsWith('image/')
-    ) ?? [];
-
-    const attachmentPlaceholder = imageAttachments.length > 0
+    const attachmentPlaceholder = allAttachments.length > 0
       ? `
         <div style="background:#fff8e7;border:1px solid #f0c040;border-radius:6px;padding:12px;margin-top:16px;">
           <p style="margin:0;font-size:13px;color:#7a5c00;">
-            📎 Este correo incluye ${imageAttachments.length} imagen(es) adjunta(s) — revisa los archivos adjuntos de este correo.
+            📎 Este correo incluye ${allAttachments.length} archivo(s) adjunto(s) — revisa los archivos adjuntos de este correo.
           </p>
         </div>
       `
