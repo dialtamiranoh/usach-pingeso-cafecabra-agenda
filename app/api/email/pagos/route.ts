@@ -27,10 +27,12 @@ export async function POST(request: NextRequest) {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
 
-    const contenidoHtml = contenidoEscapado.trim()
-      ? `<pre style="background-color: #f8fafc; padding: 12px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 13px;">${contenidoEscapado}</pre>`
-      : `<p style="color:#94a3b8;font-size:13px;font-style:italic;">Sin contenido de texto en el correo original.</p>`;
-
+    const contenidoHtml = parsed.html
+      ? `<div style="margin-top:12px;">${parsed.html}</div>`
+      : contenidoEscapado.trim()
+        ? `<pre style="background-color: #f8fafc; padding: 12px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 13px;">${contenidoEscapado}</pre>`
+        : `<p style="color:#94a3b8;font-size:13px;font-style:italic;">Sin contenido de texto en el correo original.</p>`;
+        
     const senderEmail = parsed.from?.value[0]?.address || fromHeader;
     const senderName = parsed.from?.value[0]?.name || "Cliente";
     const asunto = parsed.subject || "Comprobante de Pago";
