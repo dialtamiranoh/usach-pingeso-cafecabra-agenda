@@ -4,13 +4,13 @@ import { simpleParser } from "mailparser";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+const R2_PUBLIC_URL = "https://pub-6fc1f2fb2aec478bb0722992c847da9a.r2.dev";
 
 export async function POST(request: NextRequest) {
   try {
     const fromHeader = request.headers.get("X-Email-From");
     const toHeader = request.headers.get("X-Email-To");
 
-    // Validar destinatario
     if (toHeader && !toHeader.toLowerCase().includes("pagos@cafecabra.cl")) {
       console.log(`[IGNORADO] Correo recibido para ${toHeader}, no corresponde a pagos.`);
       return NextResponse.json(
@@ -20,8 +20,6 @@ export async function POST(request: NextRequest) {
     }
 
     const rawEmail = await request.arrayBuffer();
-
-    // Parsear el correo RFC822
     const parsed = await simpleParser(Buffer.from(rawEmail));
     const contenido = parsed.text ?? (parsed.html ? convert(parsed.html, { wordwrap: false }) : "");
 
@@ -33,10 +31,30 @@ export async function POST(request: NextRequest) {
     console.log("De:", senderEmail);
     console.log("Asunto:", asunto);
 
-    // Lista de promesas para enviar correos en paralelo
+    // Subir imágenes a R2 y generar URLs públicas
+    const r2 = (request as any).env?.R2_PAGOS;
+    const imageAttachments = parsed.attachments?.filter(att =>
+      att.contentType.startsWith('image/')
+    ) ?? [];
+
+    const imageUrls: string[] = [];
+    if (r2) {
+      for (const att of imageAttachments) {
+        const key = `comprobantes/${Date.now()}-${att.filename ?? 'imagen'}`;
+        await r2.put(key, att.content, {
+          httpMetadata: { contentType: att.contentType }
+        });
+        imageUrls.push(`${R2_PUBLIC_URL}/${key}`);
+      }
+    }
+
+    const imagesHtml = imageUrls.map(url =>
+      `<img src="${url}" style="max-width:100%;border-radius:6px;margin-top:12px;" />`
+    ).join('');
+
     const emailTasks = [];
 
-    // 1. Notificación / Respuesta automática al CLIENTE
+    // 1. Respuesta automática al cliente
     if (senderEmail) {
       emailTasks.push(
         resend.emails.send({
@@ -50,7 +68,7 @@ export async function POST(request: NextRequest) {
                 Hemos recibido tu comprobante de transferencia o notificación de pago.
               </p>
               <p style="color: #334155; font-size: 14px;">
-                Nuestro equipo se encuentra validando los datos para confirmar tu reserva o pedido.
+                Nuestro equipo se encuentra validando los datos para confirmar tu reserva.
               </p>
               <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
               <p style="font-size: 12px; color: #94a3b8; margin: 0;">
@@ -62,19 +80,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-
-    // Construir preview de adjuntos para mostrar en el template
-    const imageAttachments = parsed.attachments?.filter(att => 
-      att.contentType.startsWith('image/')
-    ) ?? [];
-
-    const imagesHtml = imageAttachments.map(att => {
-      const base64 = att.content.toString('base64');
-      return `<img src="data:${att.contentType};base64,${base64}" 
-        style="max-width:100%;border-radius:6px;margin-top:12px;" />`;
-    }).join('');
-
-    // 2. Notificación al ADMIN (Enviado a reservas@cafecabra.cl para que Cloudflare lo redirija)
+    // 2. Notificación al admin
     emailTasks.push(
       resend.emails.send({
         from: "Café Cabra <no-reply@cafecabra.cl>",
@@ -102,7 +108,6 @@ export async function POST(request: NextRequest) {
       })
     );
 
-    // Disparar ambos envíos simultáneamente
     await Promise.all(emailTasks);
 
     return NextResponse.json({ ok: true }, { status: 200 });

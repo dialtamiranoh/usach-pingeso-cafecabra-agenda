@@ -32,10 +32,13 @@
 		}
 	},
 	"upload_source_maps": true,
-	
-
-
-	
+	// R2 BUCKET PARA IMÁGENES DE COMPROBANTES
+	"r2_buckets": [
+		{
+			"binding": "R2_PAGOS",
+			"bucket_name": "cafecabra-pagos"
+		}
+	],	
 	// 1. BASE DE DATOS DE PRODUCCIÓN (¡Asegúrate de mantener el ID viejo aquí!)
 	"d1_databases": [
 		{
@@ -49,6 +52,12 @@
 	"env": {
 		"staging": {
 			"name": "usach-pingeso-cafecabra-agenda-dev",
+			"r2_buckets": [
+				{
+					"binding": "R2_PAGOS",
+					"bucket_name": "cafecabra-pagos"
+				}
+			],
 			"d1_databases": [
 				{
 					// Mantenemos el mismo binding "cafe_cabra_agenda_db" para que el código 
