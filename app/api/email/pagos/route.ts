@@ -4,7 +4,6 @@ import { simpleParser } from "mailparser";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const R2_PUBLIC_URL = "https://pub-6fc1f2fb2aec478bb0722992c847da9a.r2.dev";
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,30 +30,46 @@ export async function POST(request: NextRequest) {
     console.log("De:", senderEmail);
     console.log("Asunto:", asunto);
 
-    // Subir imágenes a R2 y generar URLs públicas
-    const r2 = (request as any).env?.R2_PAGOS;
     const imageAttachments = parsed.attachments?.filter(att =>
       att.contentType.startsWith('image/')
     ) ?? [];
 
-    const imageUrls: string[] = [];
-    if (r2) {
-      for (const att of imageAttachments) {
-        const key = `comprobantes/${Date.now()}-${att.filename ?? 'imagen'}`;
-        await r2.put(key, att.content, {
-          httpMetadata: { contentType: att.contentType }
-        });
-        imageUrls.push(`${R2_PUBLIC_URL}/${key}`);
-      }
-    }
-
-    const imagesHtml = imageUrls.map(url =>
-      `<img src="${url}" style="max-width:100%;border-radius:6px;margin-top:12px;" />`
-    ).join('');
+    const attachmentPlaceholder = imageAttachments.length > 0
+      ? `
+        <div style="background:#fff8e7;border:1px solid #f0c040;border-radius:6px;padding:12px;margin-top:16px;">
+          <p style="margin:0;font-size:13px;color:#7a5c00;">
+            📎 Este correo incluye ${imageAttachments.length} imagen(es) adjunta(s) — revisa los archivos adjuntos de este correo.
+          </p>
+        </div>
+      `
+      : '';
 
     const emailTasks = [];
 
-    // 1. Respuesta automática al cliente
+    // 1. Notificación al admin
+    emailTasks.push(
+      resend.emails.send({
+        from: "Café Cabra <no-reply@cafecabra.cl>",
+        to: ["reservas@cafecabra.cl"],
+        subject: `⚠️ Comprobante / Transferencia Recibida: ${asunto}`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px;">
+            <h2 style="color: #4a2c11; margin-top: 0;">Nuevo comprobante recibido en pagos@cafecabra.cl</h2>
+            <p><strong>Remitente:</strong> ${senderName} (${senderEmail})</p>
+            <p><strong>Asunto:</strong> ${asunto}</p>
+            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 16px 0;" />
+            <pre style="background-color: #f8fafc; padding: 12px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 13px;">${contenido}</pre>
+            ${attachmentPlaceholder}
+          </div>
+        `,
+        attachments: parsed.attachments?.map(att => ({
+          filename: att.filename ?? 'adjunto',
+          content: att.content,
+        })) ?? [],
+      })
+    );
+
+    // 2. Respuesta automática al cliente
     if (senderEmail) {
       emailTasks.push(
         resend.emails.send({
@@ -80,35 +95,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Notificación al admin
-    emailTasks.push(
-      resend.emails.send({
-        from: "Café Cabra <no-reply@cafecabra.cl>",
-        to: ["reservas@cafecabra.cl"],
-        subject: `⚠️ Comprobante / Transferencia Recibida: ${asunto}`,
-        html: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px;">
-            <h2 style="color: #4a2c11; margin-top: 0;">Nuevo comprobante recibido en pagos@cafecabra.cl</h2>
-            <p><strong>Remitente:</strong> ${senderName} (${senderEmail})</p>
-            <p><strong>Asunto:</strong> ${asunto}</p>
-            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 16px 0;" />
-            ${parsed.html
-              ? `<div>${parsed.html}</div>`
-              : `<pre style="background-color: #f8fafc; padding: 12px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 13px;">${contenido}</pre>`
-            }
-            ${imagesHtml}
-          </div>
-        `,
-        attachments: parsed.attachments
-          ?.filter(att => !att.contentType.startsWith('image/'))
-          .map(att => ({
-            filename: att.filename ?? 'adjunto',
-            content: att.content,
-          })) ?? [],
-      })
-    );
+    const results = await Promise.allSettled(emailTasks);
 
-    await Promise.all(emailTasks);
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        console.error(`Error enviando correo ${index === 0 ? 'al admin' : 'al cliente'}:`, result.reason);
+      }
+    });
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {
