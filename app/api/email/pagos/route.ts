@@ -85,21 +85,74 @@ export async function POST(request: NextRequest) {
           from: "Café Cabra <no-reply@cafecabra.cl>",
           to: [senderEmail],
           subject: `Confirmación de Recepción - ${asunto}`,
-          html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px;">
-              <h2 style="color: #4a2c11; margin-top: 0;">¡Hola ${senderName}!</h2>
-              <p style="color: #334155; font-size: 16px; line-height: 1.5;">
-                Hemos recibido tu comprobante de transferencia o notificación de pago.
-              </p>
-              <p style="color: #334155; font-size: 14px;">
-                Nuestro equipo se encuentra validando los datos para confirmar tu reserva.
-              </p>
-              <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-              <p style="font-size: 12px; color: #94a3b8; margin: 0;">
-                Este es un mensaje automático, por favor no respondas a este correo.
-              </p>
-            </div>
-          `,
+          html: `<!DOCTYPE html>
+          <html>
+          <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body style="margin:0;padding:0;background:#ffffff;font-family:Arial,Helvetica,sans-serif;">
+
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;">
+            <tr>
+              <td align="center" style="padding:32px 16px;">
+
+                <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.10);">
+
+                  <!-- HEADER -->
+                  <tr>
+                    <td style="background:#111111;padding:32px 40px;text-align:center;">
+                      <img src="https://pub-6fc1f2fb2aec478bb0722992c847da9a.r2.dev/CAFE%20CABRA%20ESCUELA%20BLANCO.png"
+                          alt="Café Cabra Escuela" width="200"
+                          style="height:auto;display:block;margin:0 auto;border:0;">
+                    </td>
+                  </tr>
+
+                  <!-- BODY -->
+                  <tr>
+                    <td style="padding:40px 40px 32px;">
+
+                      <h2 style="font-size:20px;color:#111111;margin:0 0 10px 0;">¡Hola ${senderName}! 🐐</h2>
+                      <p style="font-size:14px;color:#666666;line-height:1.65;margin:0 0 28px 0;">
+                        Recibimos tu comprobante de transferencia. Nuestro equipo está validando el pago para confirmar tu reserva.
+                      </p>
+
+                      <!-- CALLOUT -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
+                        <tr>
+                          <td style="background:#fff8e7;border-left:4px solid #f3b228;border-radius:4px;padding:14px 18px;font-size:13px;color:#666666;line-height:1.6;">
+                            Te contactaremos a la brevedad para confirmar tu cupo una vez que validemos la transferencia.
+                          </td>
+                        </tr>
+                      </table>
+
+                      <p style="font-size:14px;color:#666666;line-height:1.7;margin:0;">
+                        ¡Nos vemos pronto! ☕<br>
+                        <strong style="color:#111111;">Café Cabra Escuela</strong>
+                      </p>
+
+                    </td>
+                  </tr>
+
+                  <!-- FOOTER -->
+                  <tr>
+                    <td style="background:#111111;padding:20px 40px;text-align:center;">
+                      <p style="font-size:11px;color:#777777;margin:0;">
+                        Este es un mensaje automático, por favor no respondas a este correo.<br><br>
+                        <a href="https://cafecabra.cl" style="color:#aaaaaa;text-decoration:none;">cafecabra.cl</a>
+                        <span style="color:#444444;margin:0 8px;">·</span>
+                        <a href="https://www.instagram.com/cafecabra/" style="color:#aaaaaa;text-decoration:none;">@cafecabra</a>
+                      </p>
+                    </td>
+                  </tr>
+
+                </table>
+              </td>
+            </tr>
+          </table>
+
+          </body>
+          </html>`,
         })
       );
     }
