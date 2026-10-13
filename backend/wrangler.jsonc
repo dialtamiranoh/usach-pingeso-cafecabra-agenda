@@ -6,10 +6,10 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "usach-pingeso-cafecabra-agenda",
 	"compatibility_date": "2026-09-29",
-	"main": "vinext/server/fetch-handler",
+	"main": "src/index.ts",
 	"assets": {
-		"directory": "dist/client",
-		"not_found_handling": "none",
+		"directory": "../frontend/dist",
+		"not_found_handling": "single-page-application", "run_worker_first": ["/api", "/api/*"],
 		"binding": "ASSETS"
 	},
 	"images": {

@@ -1,18 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
+
 import { convert } from "html-to-text";
 import { simpleParser } from "mailparser";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function POST(request: NextRequest) {
+
+export async function receivePaymentEmail(request: Request, apiKey: string) {
+  const resend = new Resend(apiKey);
   try {
     const fromHeader = request.headers.get("X-Email-From");
     const toHeader = request.headers.get("X-Email-To");
 
     if (toHeader && !toHeader.toLowerCase().includes("pagos@cafecabra.cl")) {
       console.log(`[IGNORADO] Correo recibido para ${toHeader}, no corresponde a pagos.`);
-      return NextResponse.json(
+      return Response.json(
         { message: "Correo ignorado: el destinatario no es pagos@cafecabra.cl" },
         { status: 200 }
       );
@@ -112,9 +113,9 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    return NextResponse.json({ ok: true }, { status: 200 });
+    return Response.json({ ok: true }, { status: 200 });
   } catch (error) {
     console.error("Error procesando email:", error);
-    return NextResponse.json({ error: "Error interno" }, { status: 500 });
+    return Response.json({ error: "Error interno" }, { status: 500 });
   }
 }

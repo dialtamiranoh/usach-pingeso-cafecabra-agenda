@@ -2,41 +2,19 @@
   "name": "usach-pingeso-cafecabra-agenda",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "npm",
-  "dependencies": {
-    "@vinext/cloudflare": "latest",
-    "drizzle-orm": "^0.45.3",
-    "html-to-text": "^10.0.1",
-    "mailparser": "^3.9.32",
-    "react": "latest",
-    "react-dom": "latest",
-    "react-server-dom-webpack": "latest",
-    "resend": "^6.18.0-canary.0",
-    "vinext": "latest"
-  },
-  "devDependencies": {
-    "@cloudflare/vite-plugin": "latest",
-    "@tailwindcss/postcss": "latest",
-    "@types/html-to-text": "^9.0.4",
-    "@types/mailparser": "^3.9.0",
-    "@types/node": "^26.6.3",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "@vitejs/plugin-react": "latest",
-    "@vitejs/plugin-rsc": "latest",
-    "drizzle-kit": "^0.31.11",
-    "tailwindcss": "latest",
-    "typescript": "latest",
-    "vite": "latest",
-    "wrangler": "^4.143.1"
-  },
   "type": "module",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ],
   "scripts": {
-    "dev": "vinext dev",
-    "build": "vinext build",
-    "start": "wrangler dev --config dist/server/wrangler.json",
-    "deploy": "vinext-cloudflare deploy --config dist/server/wrangler.json",
-    "preview": "npm run build && npm run start --",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv ./worker-configuration.d.ts"
+    "dev": "node scripts/dev.mjs",
+    "dev:frontend": "npm run dev --workspace frontend",
+    "dev:backend": "npm run dev --workspace backend",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build": "npm run build --workspace frontend && npm run build --workspace backend",
+    "deploy:dev": "npm run build && npm run deploy:dev --workspace backend",
+    "deploy:prod": "npm run build && npm run deploy:prod --workspace backend"
   }
 }
