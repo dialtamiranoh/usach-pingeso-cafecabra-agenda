@@ -18,6 +18,12 @@ export async function GET() {
     body.database = "ok";
     body.tables = results.map((r) => r.name);
     body.tableCount = results.length;
+
+    // Marcador de entorno: fila 'entorno' en configuracion
+    const marca = await env.cafe_cabra_agenda_db
+      .prepare(`SELECT valor FROM configuracion WHERE clave = 'entorno'`)
+      .first<{ valor: string }>();
+    body.entorno = marca?.valor ?? null;
   } catch (err) {
     body.status = "degraded";
     body.database = "error";
