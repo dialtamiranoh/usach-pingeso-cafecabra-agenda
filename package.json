@@ -6,12 +6,14 @@
   "dependencies": {
     "@vinext/cloudflare": "latest",
     "drizzle-orm": "^0.45.3",
+    "better-auth": "^1.7.10",
     "html-to-text": "^10.0.1",
     "mailparser": "^3.9.32",
     "react": "latest",
     "react-dom": "latest",
     "react-server-dom-webpack": "latest",
     "resend": "^6.18.0-canary.0",
+    "sharp": "^0.35.5",
     "vinext": "latest"
   },
   "devDependencies": {
@@ -37,6 +39,8 @@
     "start": "wrangler dev --config dist/server/wrangler.json",
     "deploy": "vinext-cloudflare deploy --config dist/server/wrangler.json",
     "preview": "npm run build && npm run start --",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv ./worker-configuration.d.ts"
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv ./worker-configuration.d.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   }
 }

@@ -3,9 +3,15 @@
  * https://developers.cloudflare.com/workers/wrangler/configuration/
  */
 {
+	"vars": {
+		"BETTER_AUTH_URL": "https://usach-pingeso-cafecabra-agenda.diego-altamirano-h.workers.dev",
+		"BETTER_AUTH_TRUSTED_ORIGINS": "https://usach-pingeso-cafecabra-agenda.diego-altamirano-h.workers.dev"
+	},
+
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "usach-pingeso-cafecabra-agenda",
 	"compatibility_date": "2026-09-29",
+	"compatibility_flags": ["nodejs_compat"],
 	"main": "vinext/server/fetch-handler",
 	"assets": {
 		"directory": "dist/client",
@@ -50,8 +56,14 @@
 	
 	// 2. CONFIGURACIÓN DEL ENTORNO DEV
 	"env": {
+		
 		"staging": {
+			"vars": {
+				"BETTER_AUTH_URL": "https://usach-pingeso-cafecabra-agenda-dev.diego-altamirano-h.workers.dev",
+				"BETTER_AUTH_TRUSTED_ORIGINS": "https://usach-pingeso-cafecabra-agenda-dev.diego-altamirano-h.workers.dev"
+			},
 			"name": "usach-pingeso-cafecabra-agenda-dev",
+			"compatibility_flags": ["nodejs_compat"],
 			"r2_buckets": [
 				{
 					"binding": "R2_PAGOS",

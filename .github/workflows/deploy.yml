@@ -30,6 +30,15 @@ jobs:
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
 
+      # ---------- PRODUCCIÓN (main) ----------
+      - name: Apply D1 migrations (production)
+        if: github.ref == 'refs/heads/main'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 migrations apply cafe_cabra_agenda_db --remote
+
       - name: Deploy to Cloudflare (production)
         if: github.ref == 'refs/heads/main'
         uses: cloudflare/wrangler-action@v3
@@ -39,8 +48,19 @@ jobs:
           command: deploy
           secrets: |
             RESEND_API_KEY
+            BETTER_AUTH_SECRET
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+
+      # ---------- STAGING (dev) ----------
+      - name: Apply D1 migrations (staging)
+        if: github.ref == 'refs/heads/dev'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 migrations apply cafe_cabra_agenda_db --remote --env staging
 
       - name: Deploy to Cloudflare (staging)
         if: github.ref == 'refs/heads/dev'
@@ -51,5 +71,7 @@ jobs:
           command: deploy --env staging
           secrets: |
             RESEND_API_KEY
+            BETTER_AUTH_SECRET
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
