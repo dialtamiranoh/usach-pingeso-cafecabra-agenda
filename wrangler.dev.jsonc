@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "usach-pingeso-cafecabra-agenda-dev",
+  "compatibility_date": "2026-09-29",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "vinext/server/fetch-handler",
+  "assets": { "directory": "dist/client", "not_found_handling": "none", "binding": "ASSETS" },
+  "images": { "binding": "IMAGES" },
+  "observability": { "enabled": true },
+  "upload_source_maps": true,
+  "vars": {
+    "BETTER_AUTH_URL": "https://usach-pingeso-cafecabra-agenda-dev.diego-altamirano-h.workers.dev",
+    "BETTER_AUTH_TRUSTED_ORIGINS": "https://usach-pingeso-cafecabra-agenda-dev.diego-altamirano-h.workers.dev"
+  },
+  "r2_buckets": [{ "binding": "R2_PAGOS", "bucket_name": "cafecabra-pagos" }],
+  "d1_databases": [{ "binding": "cafe_cabra_agenda_db", "database_name": "cafe-cabra-agenda-db-dev", "database_id": "bb597bc4-21dd-4558-a27a-a0e9f311eaf1" }]
+}

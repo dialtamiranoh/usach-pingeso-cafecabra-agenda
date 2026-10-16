@@ -9,6 +9,7 @@ export default defineConfig({
       images: { optimizer: imagesOptimizer() },
     }),
     cloudflare({
+      configPath: process.env.WRANGLER_CONFIG,
       viteEnvironment: {
         name: "rsc",
         childEnvironments: ["ssr"],
