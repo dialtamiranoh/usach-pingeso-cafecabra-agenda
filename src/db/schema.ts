@@ -94,6 +94,12 @@ export const verification = sqliteTable("verification", {
     () => new Date(),
   ),
 });
+export const rateLimit = sqliteTable("rateLimit", {
+  id: text("id").primaryKey(),
+  key: text("key"),
+  count: integer("count"),
+  lastRequest: integer("last_request"),
+});
 
 /* ────────────────────────────────────────────────────────────────────────
    CONFIGURACIÓN GLOBAL (RN-29)

@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/src/db";
-import { user, session, account, verification } from "@/src/db/schema";
+import { user, session, account, verification, rateLimit  } from "@/src/db/schema";
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
@@ -10,7 +10,7 @@ export const auth = betterAuth({
     process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",").map((o) => o.trim()) ?? [],
   database: drizzleAdapter(db, {
     provider: "sqlite",
-    schema: { user, session, account, verification },
+    schema: { user, session, account, verification, rateLimit },
   }),
   emailAndPassword: {
     enabled: true,
