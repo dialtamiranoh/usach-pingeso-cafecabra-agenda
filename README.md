@@ -19,7 +19,7 @@ npm run build
 npm run dev
 ```
 
-Vite muestra su dirección local (normalmente http://localhost:5173). Wrangler ejecuta la API en http://localhost:8787. Vite reenvía `/api` al backend. `GET /api/health` verifica la conexión. La pantalla inicial es provisional; no implementa todavía el mockup.
+Vite muestra su dirección local (normalmente http://localhost:5173). Wrangler ejecuta la API en http://localhost:8787. Vite reenvía `/api` al backend. `GET /api/health` verifica la conexión. El frontend implementa catálogo, detalle de actividad, agenda e inscripción de demostración. React Router conecta las vistas; el encabezado y pie se comparten desde SiteLayout. Los datos temporales están en frontend/src/features/catalog/catalog-data.ts y frontend/src/features/booking/booking-data.ts; las fotografías son provisionales y el logo oficial está en frontend/public/images/. El formulario valida y muestra una revisión, pero no registra reservas ni envía correos. No hay conexión de estas vistas a D1.
 
 También se pueden ejecutar `npm run dev:frontend` y `npm run dev:backend` en terminales separadas. `npm run typecheck` valida ambos paquetes. `npm run build` compila React y empaqueta el Worker con un dry-run, sin publicar.
 
@@ -40,3 +40,9 @@ GitHub Actions valida PR a `dev` y `main`; los pushes a esas ramas despliegan su
 Drizzle solo genera migraciones locales mediante `npm run db:generate --workspace backend`; el esquema está pendiente. No se configuró conexión directa de Drizzle a producción ni se ejecutaron migraciones.
 
 La organización detallada está en `docs/arquitectura.md`.
+
+## Recorrido de demostración
+
+Desde el catálogo, elegir una actividad, abrir disponibilidad, seleccionar un día marcado y un horario, y continuar a inscripción. Las fechas de ejemplo son de octubre y noviembre de 2026. Los horarios sin cupos no son seleccionables.
+
+Las rutas son /cursos/:courseId, /cursos/:courseId/agenda y /cursos/:courseId/inscripcion?sesion=:sessionId. La inscripción requiere una sesión válida de esa actividad. El estado del formulario se conserva en memoria al volver a la agenda; recargar la página borra los datos personales. No se utiliza localStorage ni se transmiten datos al backend.

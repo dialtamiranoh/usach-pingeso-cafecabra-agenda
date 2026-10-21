@@ -1,17 +1,214 @@
 @import "tailwindcss";
+:root{font-family:Arial,Helvetica,sans-serif;color:#25211d;background:#f7f4ee;color-scheme:light;font-synthesis:none;--ink:#25211d;--paper:#f7f4ee;--sand:#d8c1a6}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{margin:0}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer}
+img{display:block;width:100%;object-fit:cover}
+:focus-visible{outline:3px solid #a56527;outline-offset:5px}
+.container{width:min(1120px,calc(100% - 80px));margin-inline:auto}
+.skip-link{position:fixed;top:10px;left:10px;transform:translateY(-200%);background:white;padding:12px;z-index:20}
+.skip-link:focus{transform:none}
 
-:root {
-  color-scheme: light;
-  background: #f8fafc;
-  color: #111827;
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+.site-header{background:var(--ink);color:var(--paper);border-bottom:1px solid #ffffff12}
+.header-inner{min-height:104px;padding-block:12px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.brand-link{display:inline-flex;flex-shrink:0}
+/* Encuadre del PNG original: se ocultan sus márgenes transparentes sin editarlo. */
+.brand-logo{display:block;position:relative;width:168px;aspect-ratio:2403 / 1122;overflow:hidden}
+.brand-logo img{position:absolute;width:137.369954%;height:227.272727%;max-width:none;left:-18.934665%;top:-63.636364%}
+.header-inner nav a{font-size:13px}
+.header-inner nav a:hover{text-decoration:underline}
+
+.hero{background:var(--sand)}
+.hero-inner{display:grid;grid-template-columns:1.2fr 1fr;gap:88px;align-items:center;padding-block:55px}
+.eyebrow{font-size:10px;letter-spacing:2px;font-weight:700;margin:0 0 20px}
+.hero h1{font-size:clamp(42px,4.8vw,65px);font-weight:750;letter-spacing:-2px;line-height:1.07;margin:0 0 26px}
+.hero-description{font-size:16px;line-height:1.65;max-width:410px;margin:0 0 32px}
+.button{min-height:44px;display:inline-flex;align-items:center;justify-content:space-between;gap:32px;border:1px solid transparent;border-radius:4px;padding:12px 18px;font-size:13px;font-weight:600;transition:background .15s}
+.button-dark{background:var(--ink);color:#fff}
+.button-dark:hover{background:#514133}
+.hero-photo{max-width:390px;justify-self:end;width:100%}
+.hero-photo img{height:330px;border-radius:5px}
+.hero-photo>span{display:block;margin-top:12px;font-size:10px;letter-spacing:.7px}
+
+.catalog{padding-block:53px 44px}
+.section-heading{display:flex;justify-content:space-between;align-items:center}
+.section-heading h2{font-size:32px;letter-spacing:-1px;font-weight:700;margin:0}
+.section-heading>span{font-size:15px;color:#93887b}
+.section-description{font-size:14px;line-height:1.7;color:#655d54;margin:15px 0 27px}
+.course-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.course-card{border:1px solid #e9e2d8;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 4px 14px #25211d06}
+.course-image{overflow:hidden}
+.course-image img{height:265px;transition:transform .3s}
+.course-card:hover .course-image img{transform:scale(1.025)}
+.course-body{padding:22px}
+.course-body h3{font-size:21px;letter-spacing:-.5px;margin:0 0 12px;font-weight:700}
+.course-body p{color:#6a6259;font-size:14px;line-height:1.65;margin:0 0 23px;min-height:47px}
+.course-body .button{width:100%}
+.demo-note{font-size:11px;color:#756c61;margin:24px 0 0}
+
+.site-footer{background:var(--ink);color:var(--paper)}
+.footer-inner{padding-block:36px;display:flex;justify-content:space-between;gap:24px}
+.footer-inner p{font-size:12px;color:#b8afa3;margin:18px 0 0}
+.footer-links{display:flex;flex-direction:column;gap:15px;font-size:12px;justify-content:center}
+.footer-links a:hover{text-decoration:underline}
+.footer-bottom{border-top:1px solid #ffffff20;padding-block:18px;font-size:10px;color:#b8afa3}
+
+.course-dialog{margin:auto;border:0;padding:0;border-radius:8px;max-width:520px;width:calc(100% - 32px);max-height:calc(100dvh - 40px);background:var(--paper);color:var(--ink);box-shadow:0 20px 80px #0004}
+.course-dialog::backdrop{background:#20191199}
+.dialog-content{padding:38px;position:relative}
+.dialog-close{position:absolute;right:16px;top:10px;border:0;background:transparent;font-size:30px;min-width:40px;min-height:40px}
+.dialog-content h2{font-size:29px;font-weight:700;margin:0 0 20px;letter-spacing:-.8px}
+.dialog-content p,.dialog-content li{font-size:14px;line-height:1.7}
+.dialog-content h3{font-size:15px;font-weight:700;margin:24px 0 12px}
+.dialog-content ul{padding-left:20px;list-style:disc}
+.dialog-note{background:#eae1d4;padding:15px;margin-block:24px}
+.dialog-content .button{width:100%}
+
+@media(max-width:760px){.container{width:calc(100% - 40px)}
+.header-inner{min-height:88px}
+.brand-logo{width:138px}
+.header-inner nav a{font-size:11px}
+.hero-inner{grid-template-columns:1fr;gap:30px;padding-block:36px}
+.hero h1{font-size:46px}
+.hero-photo{max-width:none}
+.hero-photo img{height:270px}
+.hero-description{max-width:none}
+.catalog{padding-top:38px}
+.course-grid{grid-template-columns:1fr;gap:22px}
+.section-heading h2{font-size:28px}
+.course-image img{height:250px}
+.footer-inner{flex-direction:column}
+.dialog-content{padding:32px 24px}
+.eyebrow{font-size:9px;letter-spacing:1.5px}
 }
 
-body {
-  margin: 0;
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}
+*,*::before,*::after{transition:none!important}
 }
 
-a {
-  color: inherit;
+/* Vistas de curso e inscripción: mismos colores y componentes del catálogo. */
+.experience-page { padding-block: 30px 56px; }
+.experience-page h1 { font-size: clamp(30px, 3.2vw, 42px); font-weight: 700; letter-spacing: -1.3px; line-height: 1.15; margin: 0 0 22px; }
+.experience-page h2 { font-size: 23px; font-weight: 700; letter-spacing: -.6px; margin: 0 0 12px; }
+.experience-page h3 { font-size: 16px; font-weight: 700; margin: 0 0 12px; }
+.muted { color: #6a6259; font-size: 14px; line-height: 1.65; margin: 0; }
+.breadcrumbs { margin-bottom: 32px; font-size: 12px; color: #796f63; }
+.breadcrumbs ol { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0; }
+.breadcrumbs li { display: flex; gap: 8px; align-items: center; }
+.breadcrumbs a:hover { text-decoration: underline; color: var(--ink); }
+.detail-hero { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+.detail-photo { height: 365px; border-radius: 5px; }
+.detail-copy > p:not(.eyebrow) { font-size: 15px; line-height: 1.7; margin: 0 0 18px; }
+.location-line { display: flex; align-items: center; gap: 9px; font-size: 13px; line-height: 1.5; margin: 22px 0; }
+.location-line > span { font-size: 23px; }
+.availability-badge { display: inline-block; padding: 7px 10px; border: 1px solid #a9bba1; border-radius: 3px; color: #385b36; background: #edf3e8; font-size: 11px; }
+.panel { background: #fff; border: 1px solid #ebe5db; border-radius: 6px; padding: 28px; }
+.reserve-callout { display: flex; align-items: center; justify-content: space-between; gap: 28px; margin-top: 36px; }
+.learning-section { margin-top: 32px; }
+.learning-section .panel { margin-top: 20px; }
+.topic-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 17px; font-size: 14px; }
+.topic-list li { display: flex; align-items: center; gap: 12px; }
+.topic-list span { color: #6e7d5c; }
+.booking-steps { display: flex; gap: 32px; list-style: none; padding: 0; margin: 0 0 34px; font-size: 12px; color: #918578; }
+.booking-steps li { display: flex; align-items: center; gap: 9px; }
+.booking-steps li > span { display: grid; place-items: center; border: 1px solid #d5cbbb; width: 26px; height: 26px; border-radius: 50%; font-size: 11px; }
+.booking-steps .current { color: var(--ink); font-weight: 700; }
+.booking-steps .current > span { background: var(--ink); color: #fff; border-color: var(--ink); }
+.booking-steps .completed { color: #5f714d; }
+.compact-course { display: grid; grid-template-columns: 290px 1fr; gap: 35px; align-items: center; margin-bottom: 32px; }
+.compact-course img { height: 195px; border-radius: 5px; }
+.compact-course h1 { margin-bottom: 15px; font-size: 31px; }
+.compact-course .eyebrow { margin-bottom: 14px; }
+.compact-course .location-line { margin-bottom: 0; }
+.page-heading { margin-bottom: 26px; }
+.page-heading h1 { margin-bottom: 14px; }
+.booking-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 30px; }
+.availability-content, .enrollment-content { padding-right: 30px; border-right: 1px solid #eee7dd; min-width: 0; }
+.reservation-summary h2 { font-size: 20px; }
+.reservation-summary .eyebrow { margin-bottom: 12px; }
+.summary-box { background: var(--paper); padding: 23px; margin-top: 20px; border-radius: 4px; }
+.summary-box dl { display: grid; gap: 19px; margin: 0 0 23px; }
+.summary-box dt, .review-data dt { color: #796f63; font-size: 11px; margin-bottom: 5px; }
+.summary-box dd { font-size: 14px; font-weight: 600; margin: 0; line-height: 1.55; }
+.summary-box .button { width: 100%; gap: 12px; margin-top: 10px; }
+.summary-disclaimer { font-size: 11px; line-height: 1.6; color: #796f63; margin-top: 14px; }
+.button-outline { border-color: #c0b3a3; background: transparent; color: var(--ink); justify-content: center; }
+.button-outline:hover { background: #ece4d7; }
+.button:disabled { background: #c4bdb3; color: #fff; cursor: not-allowed; }
+.calendar { margin-top: 24px; border: 1px solid #eee7dd; border-radius: 5px; padding: 16px; }
+.calendar-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 15px; }
+.calendar-toolbar h3 { margin: 0; text-transform: capitalize; font-size: 15px; }
+.calendar-arrow { background: transparent; border: 0; font-size: 18px; height: 36px; width: 36px; border-radius: 4px; }
+.calendar-arrow:hover:not(:disabled) { background: var(--paper); }
+.calendar-arrow:disabled { color: #c5beb5; cursor: default; }
+.calendar-weekdays, .calendar-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.calendar-weekdays { margin-bottom: 9px; font-size: 11px; text-align: center; color: #796f63; }
+.calendar-day { min-height: 42px; border: 1px solid transparent; border-radius: 4px; background: transparent; font-size: 13px; padding: 0; }
+.calendar-day:disabled { color: #c1bbb2; cursor: default; }
+.calendar-day.available { background: #f2ece1; color: var(--ink); border-color: #e7dbc7; }
+.calendar-day.available:hover { background: #e4d2b6; }
+.calendar-day.selected { background: var(--ink); border-color: var(--ink); color: #fff; }
+.calendar-day.full { background: #e5e1db; color: #9c9389; text-decoration: line-through; }
+.calendar-legend { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 18px; color: #796f63; font-size: 10px; }
+.calendar-legend > span { display: flex; gap: 5px; align-items: center; }
+.calendar-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+.calendar-legend .available { background: #f2ece1; border: 1px solid #e7dbc7; }
+.calendar-legend .selected { background: var(--ink); }
+.calendar-legend .full { background: #e5e1db; }
+.session-options { margin-top: 24px; }
+.selected-date { text-transform: capitalize; margin-bottom: 12px; font-size: 12px; }
+.selection-hint { color: #796f63; font-size: 13px; padding: 16px; background: var(--paper); border-radius: 4px; margin: 0; }
+.session-option { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 9px; min-height: 48px; padding: 12px 14px; border: 1px solid #ddd3c5; border-radius: 4px; background: #fff; font-size: 13px; }
+.session-option > span:last-child { font-size: 11px; }
+.session-option:hover:not(:disabled) { background: var(--paper); }
+.session-option.selected { background: var(--ink); color: #fff; border-color: var(--ink); }
+.session-option:disabled { background: #f5f3f0; color: #a29a90; border-color: #ece7e0; cursor: not-allowed; }
+.form-fields { display: grid; gap: 22px; margin-top: 27px; }
+.field { display: grid; gap: 8px; }
+.field label { font-size: 13px; font-weight: 600; }
+.field label .muted { font-size: 12px; font-weight: 400; }
+.field input, .field textarea { width: 100%; border: 1px solid #dcd3c6; border-radius: 4px; padding: 12px 14px; font: inherit; font-size: 14px; color: var(--ink); background: #fff; min-height: 46px; }
+.field textarea { resize: vertical; }
+.field input::placeholder, .field textarea::placeholder { color: #a1988b; }
+.field input[aria-invalid=true], .field textarea[aria-invalid=true] { border-color: #b64434; }
+.field-error { color: #a23124; font-size: 12px; line-height: 1.5; margin: 0; }
+.checkbox-field { display: flex; align-items: start; gap: 10px; font-size: 12px; line-height: 1.6; cursor: pointer; }
+.checkbox-field input { accent-color: var(--ink); width: 17px; height: 17px; flex-shrink: 0; margin-top: 2px; }
+.checkbox-field + .field-error { margin-top: 8px; }
+.form-demo-note { color: #796f63; background: var(--paper); padding: 15px; font-size: 11px; line-height: 1.7; margin-top: 25px; border-radius: 4px; }
+.review-data { display: grid; gap: 14px; padding: 18px; border: 1px solid #e2d9cc; border-radius: 4px; }
+.review-data dd { font-size: 14px; margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+@media (max-width: 850px) {
+  .detail-hero { gap: 30px; }
+  .booking-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 22px; }
+  .availability-content, .enrollment-content { padding-right: 22px; }
+  .summary-box { padding: 16px; }
 }
+@media (max-width: 760px) {
+  .experience-page { padding-top: 22px; }
+  .breadcrumbs { font-size: 10px; margin-bottom: 26px; }
+  .detail-hero { grid-template-columns: 1fr; gap: 26px; }
+  .detail-photo { height: 270px; }
+  .detail-copy .eyebrow { margin-bottom: 14px; }
+  .reserve-callout { flex-direction: column; align-items: stretch; margin-top: 26px; gap: 20px; }
+  .panel { padding: 22px; }
+  .booking-grid { grid-template-columns: 1fr; gap: 26px; }
+  .availability-content, .enrollment-content { border-right: 0; padding-right: 0; }
+  .reservation-summary { border-top: 1px solid #eee7dd; padding-top: 24px; }
+  .compact-course { grid-template-columns: 1fr; gap: 22px; }
+  .compact-course img { height: 180px; }
+  .compact-course h1 { font-size: 28px; }
+  .booking-steps { gap: 15px; font-size: 10px; }
+  .booking-steps li { gap: 6px; }
+  .booking-steps li > span { height: 23px; width: 23px; flex-shrink: 0; }
+  .calendar { padding: 12px; }
+  .calendar-day { min-height: 38px; }
+  .calendar-days { gap: 3px; }
+  .calendar-legend { gap: 10px; font-size: 9px; }
+}
+/* Conserva el contraste al pasar el mouse por una selección. */
+.session-option.selected:hover:not(:disabled), .calendar-day.selected:hover { background: var(--ink); color: #fff; }
+/* El título recibe foco al navegar para lectores de pantalla, sin marco visual. */
+main h1:focus-visible { outline: none; }
