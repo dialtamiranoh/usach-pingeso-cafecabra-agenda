@@ -1,1 +1,3 @@
 RESEND_API_KEY=
+# Generar un secreto local con: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+BETTER_AUTH_SECRET=

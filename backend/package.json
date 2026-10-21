@@ -4,13 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --port 8787",
+    "dev": "wrangler dev --env local --port 8787",
     "typecheck": "tsc --noEmit",
-    "build": "wrangler deploy --dry-run --outdir dist",
+    "build": "wrangler deploy --dry-run --env staging --outdir dist",
     "deploy:dev": "wrangler deploy --env staging",
     "deploy:prod": "wrangler deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv worker-configuration.d.ts",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply cafe-cabra-agenda-db-dev --local --env local",
+    "db:migrate:dev": "wrangler d1 migrations apply cafe-cabra-agenda-db-dev --remote --env staging",
+    "db:migrate:prod": "wrangler d1 migrations apply cafe-cabra-agenda-db --remote",
+    "db:list:dev": "wrangler d1 migrations list cafe-cabra-agenda-db-dev --remote --env staging"
   },
   "dependencies": {
     "hono": "^4.0.0",
@@ -18,7 +22,8 @@
     "html-to-text": "^10.0.1",
     "mailparser": "^3.9.32",
     "resend": "^6.18.0-canary.0",
-    "@cafecabra/shared": "0.1.0"
+    "@cafecabra/shared": "0.1.0",
+    "better-auth": "^1.7.10"
   },
   "devDependencies": {
     "typescript": "7.0.2",

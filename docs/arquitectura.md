@@ -1,6 +1,6 @@
 # Infraestructura propuesta para Café Cabra
 
-Estado: estructura base reorganizada localmente en frontend, backend y shared con npm workspaces. El modelo de datos y los flujos funcionales quedan para la reunión. No se modificó Cloudflare ni se desplegó la aplicación.
+Estado: estructura base reorganizada localmente en frontend, backend y shared con npm workspaces. El esquema y Better Auth del equipo se integraron el 21 de octubre de 2026; ver integracion-esquema.md. Las pantallas continúan utilizando datos de ejemplo.
 
 ## Selección tecnológica propuesta
 
@@ -8,11 +8,11 @@ Mantener un repositorio GitHub con dos paquetes independientes, administrados me
 
 | Parte | Tecnología | Responsabilidad |
 | --- | --- | --- |
-| Frontend | React, TypeScript, Vite y Tailwind CSS (router a incorporar al desarrollar pantallas) | Interfaz y navegación |
+| Frontend | React, TypeScript, Vite, React Router y Tailwind CSS | Interfaz y navegación |
 | Backend | TypeScript y Hono en Cloudflare Workers | API HTTP y lógica de aplicación |
 | Herramientas | Node.js en una versión LTS compatible, npm y Wrangler | Instalación, desarrollo, compilación y despliegue |
-| Persistencia | D1 y Drizzle ORM | Acceso a datos desde el backend; esquema pendiente |
-| Almacenamiento | R2 | Archivos privados, separado por ambiente |
+| Persistencia | D1 y Drizzle ORM | Acceso a D1 y esquema Drizzle del equipo |
+| Almacenamiento | R2 | Archivos privados; separación por ambiente pendiente |
 | Correo | Resend; recepción pendiente de decisión | Integración encapsulada en el backend |
 | Entrega | GitHub Actions y Workers Static Assets | Validar, compilar y publicar |
 
@@ -55,9 +55,9 @@ backend/
       storage/
     db/
       client.ts
-      schema.ts              # Modelo pendiente de la reunión
+      schema.ts              # Modelo Drizzle del equipo
     config/                  # Acceso tipado a bindings/configuración
-  migrations/                # SQL versionado, contenido pendiente
+  migrations/                # SQL y snapshots originales del equipo
   tests/
 shared/
   package.json
@@ -74,7 +74,7 @@ package-lock.json            # Un lockfile compartido
 
 `frontend`, `backend` y `shared` tienen dependencias y configuración propias. El paquete raíz coordina los comandos. `shared` no contiene consultas, secretos, SDK de Cloudflare ni lógica privada. El frontend nunca importa módulos internos del backend.
 
-El backend organiza cada funcionalidad en rutas HTTP, servicios y repositorios. Las rutas traducen HTTP; los servicios ejecutan casos de uso; los repositorios encapsulan D1/Drizzle. La elección de nombres de módulos y endpoints se pospone.
+El backend organiza cada funcionalidad en rutas HTTP, servicios y repositorios. Las rutas traducen HTTP; los servicios ejecutan casos de uso; los repositorios encapsulan D1/Drizzle. Las rutas de salud y autenticación están integradas; los módulos de negocio se implementarán sobre el esquema del equipo.
 
 ## Publicación y comunicación
 
@@ -102,7 +102,7 @@ Si más adelante necesitan despliegues independientes, se puede publicar el fron
 
 Mantener los nombres de Worker y D1 existentes durante la transición. Mantener el mismo nombre de binding por recurso en todos los ambientes. El repositorio actual comparte el bucket R2 entre dev y producción; su separación es una tarea pendiente.
 
-GitHub Actions debe instalar con `npm ci`, validar tipos de ambos paquetes, compilar el frontend y validar el backend. Las PR validan; los cambios integrados en `dev` despliegan a staging y los de `main` a producción. El despliegue debe usar explícitamente `backend/wrangler.jsonc`, el ambiente correspondiente y el directorio de assets correcto. No aplicar cambios de esquema remoto automáticamente durante esta migración de infraestructura.
+GitHub Actions debe instalar con `npm ci`, validar tipos de ambos paquetes, compilar el frontend y validar el backend. Las PR validan; los cambios integrados en `dev` despliegan a staging y los de `main` a producción. El despliegue debe usar explícitamente `backend/wrangler.jsonc`, el ambiente correspondiente y el directorio de assets correcto. Desde la integración del 21 de octubre, el workflow conserva la aplicación automática de migraciones por ambiente que aportó el compañero; el trabajo diario utiliza migraciones locales.
 
 Los secretos de correo y webhooks pertenecen al backend y al ambiente correspondiente. Las variables públicas de Vite nunca deben contener credenciales. Mantener un lockfile raíz y versiones verificadas; documentar npm como gestor único.
 
@@ -125,7 +125,7 @@ No se combinan ni se seleccionan ahora. El segundo camino se aproxima al código
 4. Ajustar build, assets, proxy local y GitHub Actions; verificar aislamiento de staging.
 5. Validar rutas SPA, errores de API, compilación y funcionamiento local antes de publicar cambios.
 
-La separación de paquetes, el traslado del endpoint de correo y la configuración local/CI ya se implementaron. La validación remota, la separación de R2 y la publicación siguen pendientes. Las tablas, campos, relaciones, estados y reglas de pagos o reservas quedan fuera de esta etapa.
+La separación de paquetes, el traslado del endpoint de correo y la configuración local/CI ya se implementaron. El esquema y las migraciones ya están integrados. La conexión de las pantallas de ejemplo con operaciones reales, el aislamiento de R2 y los permisos administrativos siguen pendientes; ver integracion-esquema.md.
 
 ## Fuentes
 
@@ -135,4 +135,3 @@ Documento del equipo: CafeCabra_Seleccion_Tecnologica.docx. Diagramas: Sistema_A
 - Compatibilidad Node.js: https://developers.cloudflare.com/workers/runtime-apis/nodejs/
 - Express en Workers: https://developers.cloudflare.com/workers/tutorials/deploy-an-express-app/
 - Enrutamiento de assets: https://developers.cloudflare.com/workers/static-assets/routing/advanced/
-

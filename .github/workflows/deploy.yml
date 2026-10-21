@@ -4,6 +4,11 @@ on:
     branches: [main, dev]
   pull_request:
     branches: [main, dev]
+permissions:
+  contents: read
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -11,11 +16,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22.16.0'
+          node-version: '22'
           cache: npm
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
+      - name: Apply D1 migrations (development)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        run: npm run db:migrate:dev --workspace backend
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - name: Deploy development
         if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         uses: cloudflare/wrangler-action@v3
@@ -24,9 +35,18 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: backend
           command: deploy --env staging
-          secrets: RESEND_API_KEY
+          secrets: |
+            RESEND_API_KEY
+            BETTER_AUTH_SECRET
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+      - name: Apply D1 migrations (production)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: npm run db:migrate:prod --workspace backend
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - name: Deploy production
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: cloudflare/wrangler-action@v3
@@ -35,6 +55,9 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: backend
           command: deploy
-          secrets: RESEND_API_KEY
+          secrets: |
+            RESEND_API_KEY
+            BETTER_AUTH_SECRET
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}

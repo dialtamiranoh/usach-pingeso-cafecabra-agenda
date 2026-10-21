@@ -1,48 +1,76 @@
 # Café Cabra — Agenda
 
-Repositorio con frontend React/Vite y backend Hono/Cloudflare Workers separados mediante npm workspaces. Modelo de datos pendiente de la reunión del equipo.
+Repositorio con frontend React/Vite y backend Hono/Cloudflare Workers separados mediante npm workspaces.
 
 ## Carpetas
 
-- `frontend/`: interfaz React, estilos y recursos públicos.
-- `backend/`: API, integración de correo, configuración Cloudflare y acceso a datos.
-- `shared/`: contratos públicos compartidos.
-- `docs/`: decisiones y procedimientos.
+- `frontend/`: pantallas React, navegación, estilos, logo oficial y cliente Better Auth.
+- `backend/`: API, Better Auth, correos, configuración Cloudflare y acceso a D1.
+- `backend/src/db/schema.ts`: esquema Drizzle aportado por el equipo.
+- `backend/migrations/`: las dos migraciones originales y sus snapshots, trasladados sin modificar SQL.
+- `shared/`: contratos públicos de cliente y servidor.
+- `docs/`: arquitectura y procedimiento de integración.
 
-## Desarrollo
+## Desarrollo local
 
-Usar Node.js 22.16 o posterior compatible con las dependencias y npm.
+Utilizar Node.js 22 y npm. Desde la raíz:
 
 ```sh
 npm ci
-npm run build
+npm run db:migrate:local --workspace backend
 npm run dev
 ```
 
-Vite muestra su dirección local (normalmente http://localhost:5173). Wrangler ejecuta la API en http://localhost:8787. Vite reenvía `/api` al backend. `GET /api/health` verifica la conexión. El frontend implementa catálogo, detalle de actividad, agenda e inscripción de demostración. React Router conecta las vistas; el encabezado y pie se comparten desde SiteLayout. Los datos temporales están en frontend/src/features/catalog/catalog-data.ts y frontend/src/features/booking/booking-data.ts; las fotografías son provisionales y el logo oficial está en frontend/public/images/. El formulario valida y muestra una revisión, pero no registra reservas ni envía correos. No hay conexión de estas vistas a D1.
+La migración crea las tablas en D1 **local**. No copia los datos remotos de Cloudflare. Vite muestra la interfaz en http://localhost:5173 y reenvía `/api` al Worker en http://localhost:8787. `npm run dev:frontend` y `npm run dev:backend` permiten ejecutarlos por separado. Para detener el iniciador conjunto, presionar Ctrl+C o Q en su terminal.
 
-También se pueden ejecutar `npm run dev:frontend` y `npm run dev:backend` en terminales separadas. `npm run typecheck` valida ambos paquetes. `npm run build` compila React y empaqueta el Worker con un dry-run, sin publicar.
+`GET /api/health` verifica las tablas y el marcador `entorno` de D1. `environment` identifica el ambiente de configuración (`local`, `staging`, `production`); `entorno` identifica el marcador almacenado en la base y puede ser null en local. Devuelve 503 si no puede consultar el esquema.
 
-Con `npm run dev`, detener ambos servidores con **Ctrl+C** o **Q** en la terminal. El iniciador controla el teclado y cierra los procesos de frontend y backend juntos.
+El frontend contiene catálogo, detalle, calendario e inscripción de demostración. Sigue usando datos de ejemplo de `frontend/src/features/`; todavía no consulta los eventos o registra reservas en D1.
 
-Para probar el correo, crear `backend/.dev.vars` con `RESEND_API_KEY`, usando una clave de prueba. El endpoint `POST /api/email/pagos` conserva el contrato RFC822 existente; sin clave responde 503. Esa integración puede enviar correos reales si se configura una clave real. Su autenticación y proveedor de recepción siguen pendientes de revisión.
+## Autenticación y correo
 
-## Cloudflare
+La autenticación original se adaptó a `backend/src/auth/index.ts` y `/api/auth/*`, conservando la configuración de registro, sesiones y rate limiting de Better Auth. El cliente está en `frontend/src/services/auth-client.ts`; aún no hay pantallas de login ni permisos del panel implementados.
 
-`backend/wrangler.jsonc` conserva los nombres de Worker y los identificadores D1 existentes. El Worker sirve `frontend/dist`; `/api` y `/api/*` se ejecutan primero en el backend. Las rutas de páginas usan fallback de SPA.
+Para probar autenticación, crear `backend/.dev.vars` a partir de `.dev.vars.example` si no existe y configurar `BETTER_AUTH_SECRET` con un valor local aleatorio. Generar uno con:
 
-- `npm run deploy:dev`: compila y publica al ambiente `staging`.
-- `npm run deploy:prod`: compila y publica a producción.
-- `npm run cf-typegen --workspace backend`: actualiza tipos desde Wrangler.
+```sh
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
 
-GitHub Actions valida PR a `dev` y `main`; los pushes a esas ramas despliegan sus respectivos ambientes. Las credenciales deben existir como secretos de GitHub/Cloudflare. El workflow conserva el secreto de correo existente; separar sus valores por ambiente requiere configurar los secretos del equipo. Dev y producción aún comparten el bucket R2 heredado: separar antes de trabajar con comprobantes reales.
+No versionar ni compartir ese archivo. Sin secreto, la API de autenticación devuelve 503. El origen local configurado es http://localhost:5173. En remoto, cada ambiente tiene su propia URL y lista de orígenes en Wrangler.
 
-Drizzle solo genera migraciones locales mediante `npm run db:generate --workspace backend`; el esquema está pendiente. No se configuró conexión directa de Drizzle a producción ni se ejecutaron migraciones.
+La ruta `POST /api/email/pagos` conserva el procesamiento RFC822 y las plantillas del equipo. Sin `RESEND_API_KEY` responde 503. No utilizar una clave real para pruebas que puedan enviar correos a terceros.
 
-La organización detallada está en `docs/arquitectura.md`.
+## Validación y esquema
 
-## Recorrido de demostración
+```sh
+npm run typecheck
+npm run build
+npm run db:generate --workspace backend
+```
 
-Desde el catálogo, elegir una actividad, abrir disponibilidad, seleccionar un día marcado y un horario, y continuar a inscripción. Las fechas de ejemplo son de octubre y noviembre de 2026. Los horarios sin cupos no son seleccionables.
+La compilación genera `frontend/dist` y empaqueta el backend con un dry-run de staging, sin publicar. Drizzle genera SQL local y no contiene credenciales remotas. Para aplicar las migraciones pendientes en Cloudflare existen comandos explícitos:
 
-Las rutas son /cursos/:courseId, /cursos/:courseId/agenda y /cursos/:courseId/inscripcion?sesion=:sessionId. La inscripción requiere una sesión válida de esa actividad. El estado del formulario se conserva en memoria al volver a la agenda; recargar la página borra los datos personales. No se utiliza localStorage ni se transmiten datos al backend.
+- `npm run db:list:dev --workspace backend`: consulta migraciones de desarrollo.
+- `npm run db:migrate:dev --workspace backend`: aplica a D1 de desarrollo.
+- `npm run db:migrate:prod --workspace backend`: aplica a D1 de producción.
+
+No utilizar los comandos remotos durante el trabajo diario. Wrangler mantiene el historial de migraciones en `d1_migrations`.
+
+## Ambientes y GitHub Actions
+
+La configuración única es `backend/wrangler.jsonc`:
+
+| Ambiente | Worker | D1 |
+| --- | --- | --- |
+| Local | ejecución local (`env local`) | emulación local de la base dev |
+| Desarrollo | `usach-pingeso-cafecabra-agenda-dev` (`env staging`) | `cafe-cabra-agenda-db-dev` |
+| Producción | `usach-pingeso-cafecabra-agenda` (raíz) | `cafe-cabra-agenda-db` |
+
+El Worker sirve los assets de React y ejecuta `/api` primero. Se conservan los nombres e IDs remotos existentes. El bucket `cafecabra-pagos` todavía es compartido por dev y producción: su separación sigue pendiente.
+
+Las PR a `dev`/`main` instalan, validan tipos y compilan. Un push a `dev` aplica migraciones pendientes y despliega **solo desarrollo**; un push a `main` hace lo mismo en producción. Se conserva el comportamiento de migraciones del workflow aportado por el compañero, adaptado a workspaces y a la configuración explícita de cada ambiente. La concurrencia serializa ejecuciones por rama.
+
+Se requieren los secretos de GitHub `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `RESEND_API_KEY` y `BETTER_AUTH_SECRET`. El workflow conserva los secretos del repositorio que usaba el equipo; separar sus valores por ambiente es una mejora pendiente. Los secretos no están dentro de los archivos versionados.
+
+`npm run deploy:dev` y `npm run deploy:prod` compilan y publican, pero no aplican migraciones automáticamente fuera de CI.
