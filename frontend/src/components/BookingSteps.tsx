@@ -1,6 +1,5 @@
-const steps = ['Elige tu fecha', 'Tus datos', 'Revisión'];
-
-export function BookingSteps({ current }: { current: number }) {
+export function BookingSteps({ current, requiresPayment = true }: { current: number; requiresPayment?: boolean }) {
+  const steps = requiresPayment ? ['Elige tu fecha', 'Tus datos', 'Transferencia', 'Revisión'] : ['Elige tu fecha', 'Tus datos', 'Revisión'];
   return (
     <ol className="booking-steps" aria-label="Pasos de inscripción">
       {steps.map((step, index) => (

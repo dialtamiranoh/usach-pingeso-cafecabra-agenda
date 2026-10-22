@@ -14,7 +14,12 @@
     "db:migrate:local": "wrangler d1 migrations apply cafe-cabra-agenda-db-dev --local --env local",
     "db:migrate:dev": "wrangler d1 migrations apply cafe-cabra-agenda-db-dev --remote --env staging",
     "db:migrate:prod": "wrangler d1 migrations apply cafe-cabra-agenda-db --remote",
-    "db:list:dev": "wrangler d1 migrations list cafe-cabra-agenda-db-dev --remote --env staging"
+    "db:list:dev": "wrangler d1 migrations list cafe-cabra-agenda-db-dev --remote --env staging",
+    "db:dates:local": "wrangler d1 execute cafe-cabra-agenda-db-dev --local --env local --file seeds/modalidad-fechas.sql",
+    "db:seed:dev": "wrangler d1 execute cafe-cabra-agenda-db-dev --remote --env staging --file seeds/catalogo-dev.sql",
+    "db:seed:event:local": "wrangler d1 execute cafe-cabra-agenda-db-dev --local --env local --file seeds/evento-ejemplo.sql",
+    "db:seed:local": "wrangler d1 execute cafe-cabra-agenda-db-dev --local --env local --file seeds/cursos-ejemplo.sql",
+    "db:courses:local": "wrangler d1 execute cafe-cabra-agenda-db-dev --local --env local --file seeds/listar-cursos.sql"
   },
   "dependencies": {
     "hono": "^4.0.0",

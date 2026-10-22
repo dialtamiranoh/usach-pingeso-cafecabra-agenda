@@ -3,7 +3,11 @@ import { receivePaymentEmail } from './integrations/email/payments';
 import { createAuth } from './auth';
 import { checkHealth } from './routes/health';
 import type { AppBindings } from './config/bindings';
+import { catalogRoutes } from './routes/catalog';
+import { enrollmentRoutes } from './routes/enrollments';
 const app = new Hono<{ Bindings: AppBindings }>();
+app.route('/api', catalogRoutes);
+app.route('/api', enrollmentRoutes);
 app.get('/api/health', async c => {
   const body = await checkHealth(c.env);
   return c.json(body, body.status === 'ok' ? 200 : 503);

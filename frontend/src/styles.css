@@ -161,6 +161,9 @@ img{display:block;width:100%;object-fit:cover}
 .selected-date { text-transform: capitalize; margin-bottom: 12px; font-size: 12px; }
 .selection-hint { color: #796f63; font-size: 13px; padding: 16px; background: var(--paper); border-radius: 4px; margin: 0; }
 .session-option { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 9px; min-height: 48px; padding: 12px 14px; border: 1px solid #ddd3c5; border-radius: 4px; background: #fff; font-size: 13px; }
+.session-schedule { display: grid; gap: 12px; text-align: left; }
+.session-schedule > span { display: grid; gap: 4px; }
+.session-day-label { font-weight: 600; }
 .session-option > span:last-child { font-size: 11px; }
 .session-option:hover:not(:disabled) { background: var(--paper); }
 .session-option.selected { background: var(--ink); color: #fff; border-color: var(--ink); }
@@ -212,3 +215,21 @@ img{display:block;width:100%;object-fit:cover}
 .session-option.selected:hover:not(:disabled), .calendar-day.selected:hover { background: var(--ink); color: #fff; }
 /* El título recibe foco al navegar para lectores de pantalla, sin marco visual. */
 main h1:focus-visible { outline: none; }
+
+.field select { width: 100%; min-height: 46px; border: 1px solid #dcd3c6; border-radius: 4px; padding: 12px; font: inherit; font-size: 14px; color: var(--ink); background: #fff; }
+.field-hint { font-size: 11px; line-height: 1.6; color: #796f63; margin: 0; }
+.enrollment-fieldset { border: 0; border-top: 1px solid #e8dfd2; padding: 24px 0 0; margin: 8px 0 0; display: grid; gap: 20px; min-width: 0; }
+.enrollment-fieldset legend { font-size: 18px; font-weight: 700; padding-right: 12px; }
+.fieldset-description { font-size: 12px; line-height: 1.7; color: #796f63; margin: 0; }
+.payer-name-preview { background: var(--paper); padding: 12px 14px; font-size: 12px; line-height: 1.6; border-radius: 4px; margin: 0; overflow-wrap: anywhere; }
+/* Mantiene la acción visible en escritorio mientras se completa el formulario. */
+.enrollment-content + .reservation-summary { position: sticky; top: 24px; align-self: start; }
+@media (max-width: 760px) { .enrollment-content + .reservation-summary { position: static; } }
+@media (max-width: 480px) { .booking-steps { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } }
+
+.course-placeholder { display: grid; place-items: center; background: #e8dfd0; color: #54442f; font-weight: 700; text-align: center; min-height: 240px; padding: 24px; }
+.course-image .course-placeholder { height: 100%; }
+.course-information { margin-top: 28px; padding: 28px; }
+.course-description { white-space: pre-line; }
+
+.confirmation-home { margin-top: 24px; }

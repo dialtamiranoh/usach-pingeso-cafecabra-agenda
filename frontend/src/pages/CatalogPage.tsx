@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { catalogItems, heroImage } from '../features/catalog/catalog-data';
+import { heroImage, type CatalogItem } from '../features/catalog/catalog-data';
 import { CourseCard } from '../features/catalog/CourseCard';
-export function CatalogPage() {
+export function CatalogPage({ items: catalogItems, loading, error, retry }: { items: CatalogItem[]; loading: boolean; error: string; retry: () => void }) {
   const navigate = useNavigate();
   return (
     <main id="contenido">
@@ -12,10 +12,13 @@ export function CatalogPage() {
         </div>
       </section>
       <section className="catalog container" id="cursos" aria-labelledby="catalog-title">
-        <div className="section-heading"><h2 id="catalog-title">Nuestros cursos</h2><span aria-hidden="true">01 /</span></div>
+        <div className="section-heading"><h2 id="catalog-title">Cursos y eventos</h2><span aria-hidden="true">01 /</span></div>
         <p className="section-description">Descubre nuestras experiencias y aprende nuevas técnicas junto a expertos del café.</p>
+        {loading && <p role="status">Cargando cursos…</p>}
+        {error && <div role="alert"><p>{error}</p><button className="button button-dark" onClick={retry}>Reintentar</button></div>}
+        {!loading && !error && !catalogItems.length && <p>No hay cursos ni catas disponibles por el momento.</p>}
         <div className="course-grid">{catalogItems.map(item => <CourseCard key={item.id} item={item} onSelect={course => navigate(`/cursos/${course.id}`)} />)}</div>
-        <p className="demo-note">Vista de demostración · Actividades de ejemplo</p>
+        <p className="demo-note">Cursos y eventos · Café Cabra</p>
       </section>
     </main>
   );

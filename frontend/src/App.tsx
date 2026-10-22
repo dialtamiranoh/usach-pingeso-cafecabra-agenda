@@ -5,10 +5,11 @@ import { CatalogPage } from './pages/CatalogPage';
 import { CourseDetailPage } from './pages/CourseDetailPage';
 import { AvailabilityPage } from './pages/AvailabilityPage';
 import { EnrollmentPage } from './pages/EnrollmentPage';
-import { catalogItems } from './features/catalog/catalog-data';
-import { demoSessions, emptyDraft, type EnrollmentDraft } from './features/booking/booking-data';
+import type { CatalogItem } from './features/catalog/catalog-data';
+import { useCatalog } from './features/catalog/useCatalog';
+import { emptyDraft, validatePersonalDetails, type EnrollmentDraft } from './features/booking/booking-data';
 
-function RouteAccessibility() {
+function RouteAccessibility({ contentKey }: { contentKey: string }) {
   const { pathname, hash } = useLocation();
   useEffect(() => {
     const heading = document.querySelector<HTMLElement>('main h1');
@@ -20,7 +21,7 @@ function RouteAccessibility() {
       heading?.setAttribute('tabindex', '-1');
       heading?.focus({ preventScroll: true });
     }
-  }, [pathname, hash]);
+  }, [pathname, hash, contentKey]);
   return null;
 }
 
@@ -32,35 +33,48 @@ function NotFoundPage() {
   </main>;
 }
 
-function CourseRoute({ view, drafts, onChangeDraft }: {
-  view: 'detail' | 'agenda' | 'enrollment';
+function CourseRoute({ view, drafts, onChangeDraft, catalogItems, loading, error, retry }: {
+  catalogItems: CatalogItem[];
+  loading: boolean;
+  error: string;
+  retry: () => void;
+  view: 'detail' | 'agenda' | 'enrollment' | 'transfer';
   drafts: Record<string, EnrollmentDraft>;
   onChangeDraft: (key: string, draft: EnrollmentDraft) => void;
 }) {
   const { courseId } = useParams();
   const [params] = useSearchParams();
+  if (loading) return <main id="contenido" className="container experience-page"><h1>Cargando curso…</h1></main>;
+  if (error) return <main id="contenido" className="container experience-page"><h1>No pudimos cargar el curso</h1><p role="alert">{error}</p><button className="button button-dark" onClick={retry}>Reintentar</button></main>;
   const course = catalogItems.find(item => item.id === courseId);
   if (!course) return <NotFoundPage />;
   if (view === 'detail') return <CourseDetailPage course={course} />;
   if (view === 'agenda') return <AvailabilityPage key={course.id} course={course} />;
-  const session = demoSessions.find(item => item.courseId === course.id && item.id === params.get('sesion') && item.remainingSeats > 0);
+  const session = course.sessions.find(item => item.courseId === course.id && item.id === params.get('sesion') && item.remainingSeats > 0);
   if (!session) return <Navigate to={`/cursos/${course.id}/agenda`} replace />;
   // Se conserva solo en memoria al navegar. Una recarga borra los datos personales.
-  return <EnrollmentPage key={session.id} course={course} session={session} draft={drafts[session.id] ?? emptyDraft}
+  const draft = { ...emptyDraft, ...drafts[session.id] };
+  if (view === 'transfer' && (!course.requiresPayment || Object.keys(validatePersonalDetails(draft)).length)) {
+    return <Navigate to={`/cursos/${course.id}/inscripcion?sesion=${session.id}`} replace />;
+  }
+  return <EnrollmentPage key={`${session.id}-${view}`} course={course} session={session} draft={draft} step={view === 'transfer' ? 'transfer' : 'personal'}
     onChange={draft => onChangeDraft(session.id, draft)} />;
 }
 
 export default function App() {
+  const { items: catalogItems, loading, error, retry } = useCatalog();
   const [drafts, setDrafts] = useState<Record<string, EnrollmentDraft>>({});
-  const routeProps = { drafts, onChangeDraft: (key: string, draft: EnrollmentDraft) => setDrafts(previous => ({ ...previous, [key]: draft })) };
+  const routeProps = { catalogItems, loading, error, retry, drafts, onChangeDraft: (key: string, draft: EnrollmentDraft) => setDrafts(previous => ({ ...previous, [key]: draft })) };
   return <SiteLayout>
     <Routes>
-      <Route path="/" element={<CatalogPage />} />
+      <Route path="/gestion/cursos" element={<Navigate to="/#cursos" replace />} />
+      <Route path="/" element={<CatalogPage items={catalogItems} loading={loading} error={error} retry={retry} />} />
       <Route path="/cursos/:courseId" element={<CourseRoute view="detail" {...routeProps} />} />
       <Route path="/cursos/:courseId/agenda" element={<CourseRoute view="agenda" {...routeProps} />} />
       <Route path="/cursos/:courseId/inscripcion" element={<CourseRoute view="enrollment" {...routeProps} />} />
+      <Route path="/cursos/:courseId/transferencia" element={<CourseRoute view="transfer" {...routeProps} />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
-    <RouteAccessibility />
+    <RouteAccessibility contentKey={`${loading}-${error}-${catalogItems.length}`} />
   </SiteLayout>;
 }

@@ -1,4 +1,4 @@
-import type { CatalogItem } from './catalog-data';
+import { formatPrice, type CatalogItem } from './catalog-data';
 export function CourseCard({item,onSelect}:{item:CatalogItem;onSelect:(item:CatalogItem)=>void}) {
-  return <article className="course-card"><div className="course-image"><img src={item.image} alt={item.imageAlt} loading="lazy" /></div><div className="course-body"><h3>{item.title}</h3><p>{item.description}</p><button className="button button-dark" onClick={()=>onSelect(item)}>{item.action}<span aria-hidden="true">→</span></button></div></article>;
+  return <article className="course-card"><div className="course-image">{item.image ? <img src={item.image} alt={item.imageAlt} loading="lazy" /> : <div className="course-placeholder" aria-label="Fotografía por confirmar">CAFÉ CABRA · ESCUELA</div>}</div><div className="course-body"><p className="eyebrow">{item.type}</p><h3>{item.title}</h3>{item.status !== 'ABIERTO' && <p className="availability-badge">Próximamente · Horario por confirmar</p>}<p>{item.description.split('\n')[0]}</p><p><strong>{item.requiresPayment ? formatPrice(item.price) : 'Entrada liberada'}</strong></p><button className="button button-dark" onClick={()=>onSelect(item)}>{item.action}<span aria-hidden="true">→</span></button></div></article>;
 }

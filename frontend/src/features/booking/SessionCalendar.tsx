@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { formatSessionDate, type DemoSession } from './booking-data';
+import { formatSessionDate, type BookingSession } from './booking-data';
 
-export function SessionCalendar({ sessions, selectedDate, onSelectDate }: {
-  sessions: DemoSession[];
+export function SessionCalendar({ sessions, selectedDate, selectedDates = [selectedDate], onSelectDate }: {
+  sessions: BookingSession[];
   selectedDate: string;
+  selectedDates?: string[];
   onSelectDate: (date: string) => void;
 }) {
   const months = [...new Set(sessions.map(session => session.date.slice(0, 7)))].sort();
@@ -26,7 +27,7 @@ export function SessionCalendar({ sessions, selectedDate, onSelectDate }: {
         <button type="button" className="calendar-arrow" aria-label="Mes siguiente" disabled={monthIndex === months.length - 1} onClick={() => setMonth(months[monthIndex + 1])}>→</button>
       </div>
       <div className="calendar-weekdays" aria-hidden="true">{['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do'].map(day => <span key={day}>{day}</span>)}</div>
-      <div className="calendar-days" role="group" aria-label={`Fechas de ejemplo de ${label}`}>
+      <div className="calendar-days" role="group" aria-label={`Fechas de ${label}`}>
         {Array.from({ length: offset }, (_, index) => <span key={`blank-${index}`} />)}
         {Array.from({ length: days }, (_, index) => {
           const day = index + 1;
@@ -35,8 +36,8 @@ export function SessionCalendar({ sessions, selectedDate, onSelectDate }: {
           const available = daySessions.some(session => session.remainingSeats > 0);
           const full = daySessions.length > 0 && !available;
           return (
-            <button key={date} type="button" className={`calendar-day ${available ? 'available' : ''} ${selectedDate === date ? 'selected' : ''} ${full ? 'full' : ''}`}
-              disabled={!available} aria-pressed={selectedDate === date}
+            <button key={date} type="button" className={`calendar-day ${available ? 'available' : ''} ${selectedDates.includes(date) ? 'selected' : ''} ${full ? 'full' : ''}`}
+              disabled={!available} aria-pressed={selectedDates.includes(date)}
               aria-label={`${formatSessionDate(date)}${available ? ', disponible' : full ? ', sin cupos' : ', sin actividad'}`}
               onClick={() => onSelectDate(date)}>{day}</button>
           );
