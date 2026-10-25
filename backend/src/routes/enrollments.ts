@@ -165,26 +165,30 @@ enrollmentRoutes.post('/inscripciones', async c => {
   }
 
   // ---- Flujo PAGADO: nace RESERVADO con plazo de pago (12 h) ----
+  // reservado_por = titular que paga; reservado_para = asistente (RN-37).
+  const payerSameAsAttendee = input.payerSameAsAttendee === true;
+  const payerName = typeof input.payerName === 'string' ? input.payerName.trim() : '';
   const payerRut = typeof input.payerRut === 'string' ? input.payerRut.trim() : '';
-  const bankName = typeof input.bankName === 'string' ? input.bankName.trim() : '';
-  const accountRaw = typeof input.accountNumber === 'string' ? input.accountNumber.trim() : '';
-  const accountNumber = accountRaw.replace(/[\s.-]/g, '');
-  if (payerRut.length > 12 || bankName.length < 2 || bankName.length > 60 || !isValidRut(payerRut) || !/^[0-9]{5,20}$/.test(accountNumber)) {
-    return c.json({ error: 'Revisa los datos bancarios: RUT del titular, banco y número de cuenta.' }, 400);
+  const originBank = typeof input.originBank === 'string' ? input.originBank.trim() : '';
+  const accountLastFour = typeof input.accountLastFour === 'string' ? input.accountLastFour.trim() : '';
+  const titular = payerSameAsAttendee ? name : payerName;
+  if ((!payerSameAsAttendee && (titular.length < 3 || titular.length > 120)) ||
+      !isValidRut(payerRut) || originBank.length < 2 || originBank.length > 80 || !/^[0-9]{4}$/.test(accountLastFour)) {
+    return c.json({ error: 'Revisa los datos de transferencia: titular, RUT, banco y últimos 4 dígitos de la cuenta.' }, 400);
   }
 
   const inserted = await db.all<{ id: number; expira_en: number }>(sql`
     INSERT OR IGNORE INTO reservas (evento_id, codigo, reservado_por_nombre, reservado_por_correo,
       reservado_por_telefono, reservado_por_rut, reservado_para_nombre, reservado_para_rut,
       banco_origen, cuenta_origen, observaciones, estado, expira_en)
-    SELECT e.id, ${code}, ${name}, ${email}, ${phone}, ${payerRut}, ${name}, ${payerRut}, ${bankName}, ${accountNumber}, ${details}, 'RESERVADO',
+        SELECT e.id, ${code}, ${titular}, ${email}, ${phone}, ${payerRut}, ${name}, ${payerRut}, ${originBank}, ${accountLastFour}, ${details}, 'RESERVADO',
       unixepoch() + COALESCE((SELECT CAST(valor AS INTEGER) FROM configuracion WHERE clave='pago:plazo_horas'), 12) * 3600
     FROM eventos e JOIN tipo_evento t ON t.id=e.tipo_evento_id JOIN ubicaciones u ON u.id=e.ubicacion_id
     WHERE e.id=${eventIdNum} AND e.estado='ABIERTO' AND t.requiere_pago=1 AND e.precio>0 AND t.activo=1 AND u.activo=1
       AND (e.cierre_inscripcion_en IS NULL OR e.cierre_inscripcion_en>unixepoch())
       AND EXISTS (SELECT 1 FROM fechas f WHERE f.evento_id=e.id)
       AND NOT EXISTS (SELECT 1 FROM reservas r WHERE r.evento_id=e.id
-        AND LOWER(TRIM(r.reservado_por_correo))=${email} AND LOWER(TRIM(r.reservado_para_nombre))=LOWER(${name})
+                AND LOWER(TRIM(r.reservado_por_correo))=${email} AND r.reservado_para_rut=${payerRut}
         AND (r.estado='CONFIRMADO' OR (r.estado='RESERVADO' AND (r.expira_en IS NULL OR r.expira_en>unixepoch()))))
       AND (e.controla_cupo=0 OR e.cupo_maximo IS NULL OR e.cupo_maximo >
         (SELECT COUNT(*) FROM reservas r WHERE r.evento_id=e.id AND
@@ -200,6 +204,6 @@ enrollmentRoutes.post('/inscripciones', async c => {
   }
 
   const transfer = await readTransfer(db, precio, inserted[0].expira_en);
-  await notify({ paid: true, transfer, payer: { rut: payerRut, bank: bankName, account: accountNumber } });
+    await notify({ paid: true, transfer, payer: { rut: payerRut, bank: originBank, account: accountLastFour } });
   return c.json({ code, status: 'RESERVADO', eventId, transfer }, 201);
 });

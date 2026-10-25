@@ -72,6 +72,6 @@ export function TransferFields(props: ExtraFieldsProps) {
       : <ExtraField {...props} name="payerName" label="Nombre completo del titular" required maxLength={120} placeholder="Nombre de quien hará el pago" />}
     <ExtraField {...props} name="payerRut" label="RUT del titular" required maxLength={12} placeholder="12.345.678-5" hint="Corresponde a quien hará la transferencia, no necesariamente a quien asiste." />
     <ExtraField {...props} name="originBank" label="Banco de origen" required maxLength={80} placeholder="Nombre del banco desde el que se pagará" />
-    <ExtraField {...props} name="accountLastFour" label="Últimos 4 dígitos de la cuenta de origen" maxLength={4} inputMode="numeric" placeholder="1234" hint="Si los conoces, pueden ayudar a distinguir pagos similares. No ingreses el número completo." />
+        <ExtraField {...props} name="accountLastFour" label="Últimos 4 dígitos de la cuenta de origen" required maxLength={4} inputMode="numeric" placeholder="1234" hint="Ayudan a identificar tu transferencia. No ingreses el número completo." />
   </fieldset>;
 }

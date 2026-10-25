@@ -60,7 +60,7 @@ export function validateTransferDetails(draft: EnrollmentDraft): Partial<Record<
     if (!draft.payerSameAsAttendee && draft.payerName.trim().length < 3) errors.payerName = 'Ingresa el nombre completo del titular que hará la transferencia.';
     if (!isValidRut(draft.payerRut)) errors.payerRut = 'Ingresa un RUT válido con dígito verificador, por ejemplo 12.345.678-5.';
     if (draft.originBank.trim().length < 2) errors.originBank = 'Indica el banco desde el que se hará la transferencia.';
-    if (draft.accountLastFour.trim() && !/^\d{4}$/.test(draft.accountLastFour.trim())) errors.accountLastFour = 'Ingresa solo los últimos cuatro dígitos de la cuenta.';
+        if (!/^\d{4}$/.test(draft.accountLastFour.trim())) errors.accountLastFour = 'Ingresa los últimos cuatro dígitos de la cuenta.';
   return errors;
 }
 

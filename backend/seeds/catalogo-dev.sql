@@ -127,3 +127,7 @@ INSERT INTO fechas(evento_id,fecha,horario) SELECT (SELECT MIN(id) FROM eventos 
 INSERT INTO evento_media(evento_id,url,tipo,orden,es_principal) SELECT (SELECT MIN(id) FROM eventos WHERE TRIM(nombre) IN ('Cata de café de especialidad · Evento de ejemplo')),'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1000&q=85','IMAGEN',0,1 WHERE NOT EXISTS (SELECT 1 FROM evento_media WHERE evento_id=(SELECT MIN(id) FROM eventos WHERE TRIM(nombre) IN ('Cata de café de especialidad · Evento de ejemplo')) AND tipo='IMAGEN');
 --> statement-breakpoint
 INSERT INTO configuracion(clave,valor) SELECT 'evento:' || (SELECT MIN(id) FROM eventos WHERE TRIM(nombre) IN ('Cata de café de especialidad · Evento de ejemplo')) || ':modalidad_fechas','INDEPENDIENTES' WHERE NOT EXISTS (SELECT 1 FROM configuracion WHERE clave='evento:' || (SELECT MIN(id) FROM eventos WHERE TRIM(nombre) IN ('Cata de café de especialidad · Evento de ejemplo')) || ':modalidad_fechas');
+
+--> statement-breakpoint
+-- Marcador de entorno: permite validar desde /api/health que dev pega a la base de dev.
+INSERT INTO configuracion (clave,valor) SELECT 'entorno','DEV' WHERE NOT EXISTS (SELECT 1 FROM configuracion WHERE clave='entorno');

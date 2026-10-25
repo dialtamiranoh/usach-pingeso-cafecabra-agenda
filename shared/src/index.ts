@@ -24,9 +24,11 @@ export interface FreeEnrollmentRequest {
   confirmed: boolean;
 }
 export interface PaidEnrollmentRequest extends FreeEnrollmentRequest {
+  payerSameAsAttendee: boolean;
+  payerName: string;
   payerRut: string;
-  bankName: string;
-  accountNumber: string;
+  originBank: string;
+  accountLastFour: string;
 }
 export interface TransferDetails {
   titular: string;

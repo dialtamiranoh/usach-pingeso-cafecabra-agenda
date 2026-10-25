@@ -7,7 +7,12 @@ import { formatSessionDate, validateDraft, validatePersonalDetails, type Booking
 import { ReservationSummary } from '../features/booking/ReservationSummary';
 import { DietaryFields, InstagramField, TransferFields } from '../features/booking/EnrollmentExtraFields';
 import { dietaryLabel } from '../features/booking/enrollment-options';
-import type { EnrollmentReceipt, FreeEnrollmentRequest } from '@cafecabra/shared';
+import type { EnrollmentReceipt, FreeEnrollmentRequest, PaidEnrollmentRequest } from '@cafecabra/shared';
+
+const clpFormat = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
+function formatDeadline(epoch: number): string {
+  return epoch ? new Intl.DateTimeFormat('es-CL', { dateStyle: 'long', timeStyle: 'short', timeZone: 'America/Santiago' }).format(new Date(epoch * 1000)) : '';
+}
 
 export function EnrollmentPage({ course, session, draft, onChange, step }: {
   course: CatalogItem;
@@ -31,16 +36,19 @@ export function EnrollmentPage({ course, session, draft, onChange, step }: {
   const [receipt, setReceipt] = useState<EnrollmentReceipt | null>(null);
 
   async function confirmEnrollment() {
-    if (course.requiresPayment || sending.current || receipt) return;
+    if (sending.current || receipt) return;
     sending.current = true;
     setPending(true);
     setSaveError('');
     try {
-      const body: FreeEnrollmentRequest = {
+      const base: FreeEnrollmentRequest = {
         eventId: course.id, requestId: requestId.current, name: draft.name, email: draft.email, phone: draft.phone,
         instagram: draft.instagram, dietaryPreference: enrollmentData.dietaryPreference, dietaryOther: enrollmentData.dietaryOther,
         allergyStatus: enrollmentData.allergyStatus, allergyDetails: enrollmentData.allergyDetails, notes: draft.notes, confirmed: draft.confirmed,
       };
+      const body: FreeEnrollmentRequest | PaidEnrollmentRequest = course.requiresPayment
+        ? { ...base, payerSameAsAttendee: draft.payerSameAsAttendee, payerName: draft.payerName, payerRut: draft.payerRut, originBank: draft.originBank, accountLastFour: draft.accountLastFour }
+        : base;
       const response = await fetch('/api/inscripciones', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(15000) });
       const saved = await response.json();
       if (!response.ok) throw new Error(saved.error ?? 'No pudimos guardar tu inscripción.');
@@ -51,15 +59,36 @@ export function EnrollmentPage({ course, session, draft, onChange, step }: {
     } finally { sending.current = false; setPending(false); }
   }
 
-  if (receipt) return <main id="contenido" className="container experience-page">
-    <section className="panel course-information" role="status">
-      <p className="eyebrow">CAFÉ CABRA</p><h1>Tu inscripción está confirmada</h1>
-      <p>{course.title}</p>
-      <p>Tu lugar en el evento está reservado. ¡Te esperamos!</p>
-      <ReservationSummary course={course} session={session} persisted />
-      <Link className="button button-dark confirmation-home" to="/" reloadDocument>Volver al inicio</Link>
-    </section>
-  </main>;
+  if (receipt) {
+    const transfer = receipt.transfer;
+    return <main id="contenido" className="container experience-page">
+      <section className="panel course-information" role="status">
+        <p className="eyebrow">CAFÉ CABRA</p>
+        {receipt.status === 'RESERVADO' && transfer ? <>
+          <h1>Reserva creada — realiza tu transferencia</h1>
+          <p>{course.title}</p>
+          <p>Para confirmar tu cupo, transfiere <strong>{clpFormat.format(transfer.monto)}</strong> con estos datos:</p>
+          <dl className="review-data">
+            <div><dt>Titular</dt><dd>{transfer.titular}</dd></div>
+            <div><dt>RUT</dt><dd>{transfer.rut}</dd></div>
+            <div><dt>Banco</dt><dd>{transfer.banco}</dd></div>
+            <div><dt>Tipo de cuenta</dt><dd>{transfer.tipoCuenta}</dd></div>
+            <div><dt>N° de cuenta</dt><dd>{transfer.numeroCuenta}</dd></div>
+            <div><dt>Correo</dt><dd>{transfer.correo}</dd></div>
+            <div><dt>Código de reserva</dt><dd>{receipt.code}</dd></div>
+          </dl>
+          <p>Agrega <strong>{transfer.correo}</strong> en la notificación de la transferencia o envíanos el comprobante a ese correo.{formatDeadline(transfer.expiraEn) && <> Tienes plazo hasta el <strong>{formatDeadline(transfer.expiraEn)}</strong>.</>}</p>
+          <p className="muted">Te enviamos estos datos también a tu correo.</p>
+        </> : <>
+          <h1>Tu inscripción está confirmada</h1>
+          <p>{course.title}</p>
+          <p>Tu lugar en el evento está reservado. ¡Te esperamos!</p>
+        </>}
+        <ReservationSummary course={course} session={session} persisted />
+        <Link className="button button-dark confirmation-home" to="/" reloadDocument>Volver al inicio</Link>
+      </section>
+    </main>;
+  }
 
   function update(field: keyof EnrollmentDraft, value: string | boolean) {
     onChange({ ...draft, [field]: value });
@@ -103,7 +132,7 @@ export function EnrollmentPage({ course, session, draft, onChange, step }: {
             <div><label className="checkbox-field"><input name="confirmed" type="checkbox" required checked={draft.confirmed} onChange={event => update('confirmed', event.target.checked)} aria-invalid={Boolean(errors.confirmed)} aria-describedby={errors.confirmed ? 'confirmed-error' : undefined} /><span>Confirmo que mis datos son correctos y deseo revisar mi selección.</span></label>{errors.confirmed && <p className="field-error" id="confirmed-error">{errors.confirmed}</p>}</div>
             }
           </div>
-          <p className="form-demo-note">{course.requiresPayment ? 'La inscripción de cursos de pago aún es una demostración y no guarda datos.' : 'Tus datos se guardarán al confirmar la inscripción en el siguiente paso.'}</p>
+          <p className="form-demo-note">{course.requiresPayment ? 'Al confirmar crearemos tu reserva y te enviaremos los datos de transferencia por correo.' : 'Tus datos se guardarán al confirmar la inscripción en el siguiente paso.'}</p>
         </section>
         <ReservationSummary course={course} session={session}>
           <button type="submit" className="button button-dark">{!isTransfer && course.requiresPayment ? 'Continuar a transferencia' : 'Revisar inscripción'} <span aria-hidden="true">→</span></button>
@@ -130,9 +159,9 @@ export function EnrollmentPage({ course, session, draft, onChange, step }: {
             </>}
             {draft.notes.trim() && <div><dt>Observaciones</dt><dd>{draft.notes}</dd></div>}
           </dl>
-          <p className="dialog-note">{course.requiresPayment ? 'No se ha registrado una reserva ni enviado un correo. El pago y la confirmación se conectarán en una próxima etapa.' : 'Al confirmar reservaremos tu lugar en el evento.'}</p>
+          <p className="dialog-note">{course.requiresPayment ? 'Al confirmar crearemos tu reserva y te mostraremos los datos para transferir. Tu cupo se mantiene hasta que venza el plazo de pago.' : 'Al confirmar reservaremos tu lugar en el evento.'}</p>
           {saveError && <p role="alert" className="field-error">{saveError}</p>}
-          {!course.requiresPayment && <button type="button" className="button button-dark" disabled={pending} onClick={confirmEnrollment}>{pending ? 'Guardando inscripción…' : 'Confirmar inscripción gratuita'}</button>}
+          <button type="button" className="button button-dark" disabled={pending} onClick={confirmEnrollment}>{pending ? (course.requiresPayment ? 'Creando reserva…' : 'Guardando inscripción…') : (course.requiresPayment ? 'Confirmar y ver datos de transferencia' : 'Confirmar inscripción gratuita')}</button>
           <button type="button" className="button button-outline" disabled={pending} onClick={() => review.current?.close()}>{isTransfer ? 'Volver a transferencia' : 'Volver a mis datos'} <span aria-hidden="true">→</span></button>
         </div>
       </dialog>
