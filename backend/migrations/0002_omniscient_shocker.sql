@@ -1,0 +1,2 @@
+DROP INDEX `uq_reserva_evento_por_para`;--> statement-breakpoint
+CREATE UNIQUE INDEX `uq_reserva_evento_por_para` ON `reservas` (`evento_id`,`reservado_por_correo`,`reservado_para_rut`) WHERE estado IN ('RESERVADO', 'EN_ESPERA', 'CONFIRMADO');

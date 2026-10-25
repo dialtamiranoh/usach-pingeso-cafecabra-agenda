@@ -15,6 +15,13 @@
       "when": 1792172585319,
       "tag": "0001_famous_ultimates",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792905708912,
+      "tag": "0002_omniscient_shocker",
+      "breakpoints": true
     }
   ]
 }

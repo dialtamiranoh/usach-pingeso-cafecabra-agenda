@@ -5,6 +5,7 @@ import { checkHealth } from './routes/health';
 import type { AppBindings } from './config/bindings';
 import { catalogRoutes } from './routes/catalog';
 import { enrollmentRoutes } from './routes/enrollments';
+import { expireReservations } from './jobs/expire';
 const app = new Hono<{ Bindings: AppBindings }>();
 app.route('/api', catalogRoutes);
 app.route('/api', enrollmentRoutes);
@@ -22,4 +23,11 @@ app.post('/api/email/pagos', async c => {
 });
 app.notFound(c => c.json({error:'Ruta no encontrada'},404));
 app.onError((error,c) => { console.error('Error de API',error.message); return c.json({error:'Error interno'},500); });
-export default app;
+
+// Cron Trigger (RF-11): expira reservas impagas vencidas y libera el cupo.
+export default {
+  fetch: (request: Request, env: AppBindings, ctx: ExecutionContext) => app.fetch(request, env, ctx),
+  async scheduled(_controller: ScheduledController, env: AppBindings, ctx: ExecutionContext) {
+    ctx.waitUntil(expireReservations(env).catch(error => console.error('Error en cron de expiración', error)));
+  },
+};

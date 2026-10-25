@@ -330,11 +330,11 @@ export const reservas = sqliteTable(
   (t) => [
     // No se permite la misma dupla (reservado por, reservado para) dos veces
     // en el mismo evento. Un mismo "por" sí puede inscribir a varios "para".
-    uniqueIndex("uq_reserva_evento_por_para").on(
-      t.eventoId,
-      t.reservadoPorCorreo,
-      t.reservadoParaRut,
-    ),
+    // Índice parcial: la dupla es única solo entre reservas ACTIVAS. Una reserva
+    // EXPIRADO o CANCELADO no bloquea volver a inscribirse (RN-11, RN-12).
+    uniqueIndex("uq_reserva_evento_por_para")
+      .on(t.eventoId, t.reservadoPorCorreo, t.reservadoParaRut)
+      .where(sql`estado IN ('RESERVADO', 'EN_ESPERA', 'CONFIRMADO')`),
   ],
 );
 
