@@ -23,7 +23,27 @@ export interface FreeEnrollmentRequest {
   notes: string;
   confirmed: boolean;
 }
-export interface EnrollmentReceipt { code: string; status: 'CONFIRMADO'; eventId: string }
+export interface PaidEnrollmentRequest extends FreeEnrollmentRequest {
+  payerRut: string;
+  bankName: string;
+  accountNumber: string;
+}
+export interface TransferDetails {
+  titular: string;
+  rut: string;
+  banco: string;
+  tipoCuenta: string;
+  numeroCuenta: string;
+  correo: string;
+  monto: number;
+  expiraEn: number;
+}
+export interface EnrollmentReceipt {
+  code: string;
+  status: 'CONFIRMADO' | 'RESERVADO';
+  eventId: string;
+  transfer?: TransferDetails;
+}
 
 export interface HealthResponse {
   status: 'ok' | 'degraded';
