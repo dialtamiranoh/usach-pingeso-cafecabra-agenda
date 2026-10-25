@@ -38,7 +38,8 @@
   "vars": {
     "APP_ENV": "production",
     "BETTER_AUTH_URL": "https://usach-pingeso-cafecabra-agenda.diego-altamirano-h.workers.dev",
-    "BETTER_AUTH_TRUSTED_ORIGINS": "https://usach-pingeso-cafecabra-agenda.diego-altamirano-h.workers.dev"
+    "BETTER_AUTH_TRUSTED_ORIGINS": "https://usach-pingeso-cafecabra-agenda.diego-altamirano-h.workers.dev",
+    "ADMIN_EMAIL": "cafecabrachile@gmail.com"
   },
   "r2_buckets": [
     {
@@ -60,7 +61,8 @@
       "vars": {
         "APP_ENV": "staging",
         "BETTER_AUTH_URL": "https://usach-pingeso-cafecabra-agenda-dev.diego-altamirano-h.workers.dev",
-        "BETTER_AUTH_TRUSTED_ORIGINS": "https://usach-pingeso-cafecabra-agenda-dev.diego-altamirano-h.workers.dev"
+        "BETTER_AUTH_TRUSTED_ORIGINS": "https://usach-pingeso-cafecabra-agenda-dev.diego-altamirano-h.workers.dev",
+        "ADMIN_EMAIL": "dialtamiranoh@gmail.com"
       },
       "r2_buckets": [
         {
@@ -85,7 +87,8 @@
       "vars": {
         "APP_ENV": "local",
         "BETTER_AUTH_URL": "http://localhost:5173",
-        "BETTER_AUTH_TRUSTED_ORIGINS": "http://localhost:5173,http://127.0.0.1:5173,http://localhost:8787,http://127.0.0.1:8787"
+        "BETTER_AUTH_TRUSTED_ORIGINS": "http://localhost:5173,http://127.0.0.1:5173,http://localhost:8787,http://127.0.0.1:8787",
+        "ADMIN_EMAIL": "dialtamiranoh@gmail.com"
       },
       "r2_buckets": [
         {
