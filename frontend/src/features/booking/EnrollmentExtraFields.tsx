@@ -1,5 +1,6 @@
 import type { ChangeEvent, HTMLAttributes } from 'react';
 import type { EnrollmentDraft } from './booking-data';
+import { InstitucionSelect } from './InstitucionSelect';
 import { dietaryOptions } from './enrollment-options';
 
 interface ExtraFieldsProps {
@@ -62,6 +63,17 @@ export function DietaryFields(props: ExtraFieldsProps) {
   </fieldset>;
 }
 
+/**
+ * SCRUM-91: campo "Banco de origen", el cual utiliza la lista desplegable propia definida en
+ * InstitucionSelect.tsx con las instituciones del catálogo compartido. El valor que se guarda
+ * en draft.originBank corresponde al nombre de la institución elegida, por lo que el resto
+ * del formulario y el backend reciben el mismo dato que antes.
+ */
+function OriginBankField({ draft, errors, update }: ExtraFieldsProps) {
+  return <InstitucionSelect id="originBank" label="Banco de origen" value={draft.originBank}
+    error={errors.originBank} onChange={valor => update('originBank', valor)} />;
+}
+
 export function TransferFields(props: ExtraFieldsProps) {
   const { draft, update } = props;
   return <fieldset className="enrollment-fieldset">
@@ -71,7 +83,7 @@ export function TransferFields(props: ExtraFieldsProps) {
       ? <p className="payer-name-preview">Titular: <strong>{draft.name.trim() || 'El nombre que ingreses arriba'}</strong></p>
       : <ExtraField {...props} name="payerName" label="Nombre completo del titular" required maxLength={120} placeholder="Nombre de quien hará el pago" />}
     <ExtraField {...props} name="payerRut" label="RUT del titular" required maxLength={12} placeholder="12.345.678-5" hint="Corresponde a quien hará la transferencia, no necesariamente a quien asiste." />
-    <ExtraField {...props} name="originBank" label="Banco de origen" required maxLength={80} placeholder="Nombre del banco desde el que se pagará" />
+    <OriginBankField {...props} />
         <ExtraField {...props} name="accountLastFour" label="Últimos 4 dígitos de la cuenta de origen" required maxLength={4} inputMode="numeric" placeholder="1234" hint="Ayudan a identificar tu transferencia. No ingreses el número completo." />
   </fieldset>;
 }

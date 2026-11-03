@@ -3,6 +3,7 @@ import { bodyLimit } from 'hono/body-limit';
 import { and, eq, like, sql } from 'drizzle-orm';
 import type { AppBindings } from '../config/bindings';
 import type { TransferDetails } from '@cafecabra/shared';
+import { normalizarInstitucionFinanciera } from '@cafecabra/shared';
 import { createDb } from '../db';
 import { configuracion, eventos, reservas, tipoEvento } from '../db/schema';
 import { sendEnrollmentEmails } from '../integrations/email/enrollment';
@@ -169,7 +170,9 @@ enrollmentRoutes.post('/inscripciones', async c => {
   const payerSameAsAttendee = input.payerSameAsAttendee === true;
   const payerName = typeof input.payerName === 'string' ? input.payerName.trim() : '';
   const payerRut = typeof input.payerRut === 'string' ? input.payerRut.trim() : '';
-  const originBank = typeof input.originBank === 'string' ? input.originBank.trim() : '';
+  // SCRUM-91: se guarda el nombre canónico del catálogo compartido cuando se reconoce la
+  // institución, con el fin de facilitar la conciliación de pagos.
+  const originBank = typeof input.originBank === 'string' ? normalizarInstitucionFinanciera(input.originBank) : '';
   const accountLastFour = typeof input.accountLastFour === 'string' ? input.accountLastFour.trim() : '';
   const titular = payerSameAsAttendee ? name : payerName;
   if ((!payerSameAsAttendee && (titular.length < 3 || titular.length > 120)) ||

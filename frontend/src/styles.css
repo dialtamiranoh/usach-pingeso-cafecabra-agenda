@@ -233,3 +233,18 @@ main h1:focus-visible { outline: none; }
 .course-description { white-space: pre-line; }
 
 .confirmation-home { margin-top: 24px; }
+
+/* SCRUM-91: lista desplegable propia del campo "Banco de origen" (InstitucionSelect.tsx).
+   Se replica la apariencia de ".field select" y la lista se abre bajo el campo con una
+   altura máxima de alrededor de seis opciones, la cual se recorre con desplazamiento. */
+.institucion-select-control { position: relative; }
+.institucion-select-boton { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 46px; border: 1px solid #dcd3c6; border-radius: 4px; padding: 12px; font: inherit; font-size: 14px; color: var(--ink); background: #fff; text-align: left; cursor: pointer; }
+.institucion-select-boton[aria-invalid=true] { border-color: #b64434; }
+.institucion-select-placeholder { color: var(--ink); }
+.institucion-select-flecha { font-size: 14px; line-height: 1; color: #796f63; }
+.institucion-select-lista { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 20; max-height: 264px; overflow-y: auto; margin: 0; padding: 6px 0; list-style: none; background: #fff; border: 1px solid #dcd3c6; border-radius: 4px; box-shadow: 0 10px 24px rgba(37, 33, 29, 0.12); }
+.institucion-select-lista ul { margin: 0; padding: 0; list-style: none; }
+.institucion-select-grupo { padding: 10px 14px 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #796f63; }
+.institucion-select-opcion { padding: 9px 14px 9px 22px; font-size: 14px; cursor: pointer; }
+.institucion-select-opcion.activa { background: var(--paper); }
+.institucion-select-opcion[aria-selected=true] { font-weight: 700; }

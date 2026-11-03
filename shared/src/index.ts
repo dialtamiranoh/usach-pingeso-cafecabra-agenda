@@ -1,4 +1,6 @@
 // Contratos públicos, sin secretos ni acceso a datos.
+export * from './instituciones-financieras';
+
 export interface CatalogEvent {
   id: string; title: string; description: string; type: string;
   status: 'BORRADOR' | 'ABIERTO' | 'CERRADO' | 'CANCELADO';
