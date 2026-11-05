@@ -13,6 +13,44 @@ export interface CatalogEvent {
   dates: { id: string; date: string; schedule: string | null }[];
 }
 export interface CatalogResponse { events: CatalogEvent[] }
+
+
+
+// --- Panel de administración (lectura) ---
+export interface AdminEventoProximo {
+  id: number;
+  nombre: string;
+  tipo: string;
+  fecha: string | null; // 'YYYY-MM-DD' de la próxima jornada, o null si no hay futura.
+  cupos: string;         // "ocupados / total" o "Sin límite".
+  estado: string;        // Etiqueta: Abierto, Cerrado, etc.
+}
+export interface AdminInscripcionReciente {
+  id: number;
+  alumno: string;
+  evento: string;
+  estado: string;   // Etiqueta: Confirmado, Reservado, Expirado, etc.
+  creadoEn: number; // epoch en segundos.
+}
+export interface AdminSemana {
+  label: string;
+  valor: number;
+  acento: boolean;
+}
+export interface AdminPanelResponse {
+  stats: {
+    eventosActivos: number;
+    cursosActivos: number;
+    catasActivos: number;
+    inscritosMes: number;
+    reservasPendientes: number;
+    montoReservadoMes: number;
+  };
+  proximosEventos: AdminEventoProximo[];
+  inscripcionesRecientes: AdminInscripcionReciente[];
+  inscripcionesPorSemana: AdminSemana[];
+}
+
 export interface FreeEnrollmentRequest {
   eventId: string;
   requestId: string;

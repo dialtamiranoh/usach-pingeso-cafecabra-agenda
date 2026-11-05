@@ -6,9 +6,12 @@ import type { AppBindings } from './config/bindings';
 import { catalogRoutes } from './routes/catalog';
 import { enrollmentRoutes } from './routes/enrollments';
 import { expireReservations } from './jobs/expire';
+import { adminRoutes } from './routes/admin';
+
 const app = new Hono<{ Bindings: AppBindings }>();
 app.route('/api', catalogRoutes);
 app.route('/api', enrollmentRoutes);
+app.route('/api', adminRoutes);
 app.get('/api/health', async c => {
   const body = await checkHealth(c.env);
   return c.json(body, body.status === 'ok' ? 200 : 503);

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAdminPanel, formatFechaEvento, formatFechaInscripcion, formatMonto } from '../features/admin/useAdminPanel';
 
-// Panel de administración (DUMMY). Estética minimalista estilo HyperUI.
-// Paleta: negro, blanco y acento #e6bb08. Datos de ejemplo, sin funcionalidad real todavía.
+// Panel de administración. Estética minimalista estilo HyperUI.
+// Paleta: negro, blanco y acento #e6bb08. Datos reales desde /api/admin/panel.
 
 const NAV = [
   { key: 'panel', label: 'Panel' },
@@ -13,42 +14,32 @@ const NAV = [
   { key: 'configuracion', label: 'Configuración' },
 ];
 
-const STATS = [
-  { label: 'Eventos activos', value: '3', hint: '2 cursos, 1 cata' },
-  { label: 'Inscritos del mes', value: '48', hint: '+12 vs. mes anterior' },
-  { label: 'Reservas pendientes', value: '7', hint: 'A la espera de pago' },
-  { label: 'Ingresos del mes', value: '$1.240.000', hint: 'Pagos conciliados' },
-];
-
-const PROXIMOS = [
-  { evento: 'Máster Class de Latte Art', tipo: 'Curso', fecha: '12 nov 2026', cupos: '2 / 4', estado: 'Abierto' },
-  { evento: 'Curso Barista Integral', tipo: 'Curso', fecha: '19 nov 2026', cupos: '5 / 8', estado: 'Abierto' },
-  { evento: 'Cata de café de especialidad', tipo: 'Cata', fecha: '22 nov 2026', cupos: 'Sin límite', estado: 'Abierto' },
-  { evento: 'Latte Art Personalizado', tipo: 'Curso', fecha: '28 nov 2026', cupos: '0 / 1', estado: 'Cerrado' },
-];
-
-const INSCRIPCIONES = [
-  { alumno: 'Camila Rojas', evento: 'Máster Class de Latte Art', estado: 'Confirmado', fecha: 'Hoy, 11:20' },
-  { alumno: 'Diego Soto', evento: 'Curso Barista Integral', estado: 'Reservado', fecha: 'Hoy, 09:05' },
-  { alumno: 'Valentina Pérez', evento: 'Cata de café de especialidad', estado: 'Confirmado', fecha: 'Ayer, 18:42' },
-  { alumno: 'Martín Fuentes', evento: 'Máster Class de Latte Art', estado: 'Expirado', fecha: 'Ayer, 14:10' },
-];
-
-const SEMANAS = [
-  { label: 'Sem 1', valor: 60, acento: false },
-  { label: 'Sem 2', valor: 45, acento: false },
-  { label: 'Sem 3', valor: 80, acento: false },
-  { label: 'Sem 4', valor: 100, acento: true },
-];
-
 function estadoClase(estado: string): string {
   if (estado === 'Confirmado' || estado === 'Abierto') return 'bg-[#fdf3c9] text-[#7a6200]';
-  if (estado === 'Reservado') return 'bg-[#f1f1ef] text-[#555]';
+  if (estado === 'Reservado' || estado === 'En espera') return 'bg-[#f1f1ef] text-[#555]';
   return 'bg-[#eceae4] text-[#8a8378]';
+}
+
+// Arma el detalle de la tarjeta de eventos activos: "2 cursos, 1 cata".
+function detalleEventos(cursos: number, catas: number): string {
+  const partes: string[] = [];
+  if (cursos > 0) partes.push(`${cursos} ${cursos === 1 ? 'curso' : 'cursos'}`);
+  if (catas > 0) partes.push(`${catas} ${catas === 1 ? 'cata' : 'catas'}`);
+  return partes.length ? partes.join(', ') : 'Sin eventos activos';
 }
 
 export function AdminDashboardPage() {
   const [active, setActive] = useState('panel');
+  const { data, loading, error, retry } = useAdminPanel();
+
+  const stats = data ? [
+    { label: 'Eventos activos', value: String(data.stats.eventosActivos), hint: detalleEventos(data.stats.cursosActivos, data.stats.catasActivos) },
+    { label: 'Inscritos del mes', value: String(data.stats.inscritosMes), hint: 'Reservas activas del mes' },
+    { label: 'Reservas pendientes', value: String(data.stats.reservasPendientes), hint: 'A la espera de pago' },
+    { label: 'Monto reservado del mes', value: formatMonto(data.stats.montoReservadoMes), hint: 'Reservas activas, sin conciliar' },
+  ] : [];
+
+  const maxSemana = data ? Math.max(1, ...data.inscripcionesPorSemana.map(s => s.valor)) : 1;
 
   return (
     <div className="min-h-screen flex bg-[#f5f5f4] text-[#111111] font-sans">
@@ -95,9 +86,21 @@ export function AdminDashboardPage() {
         </header>
 
         <main className="flex-1 overflow-y-auto p-5 sm:p-8 space-y-8">
+          {loading && <p className="text-sm text-[#6b6b6b]">Cargando panel...</p>}
+
+          {error && !loading && (
+            <div className="bg-white border border-[#e5e5e5] rounded-lg p-6">
+              <p className="text-sm text-[#b3261e]" role="alert">{error}</p>
+              <button type="button" onClick={retry} className="mt-3 inline-block rounded bg-[#111111] text-white text-sm font-semibold px-4 py-2 hover:bg-black">
+                Reintentar
+              </button>
+            </div>
+          )}
+
+          {data && !loading && !error && <>
           {/* Stat cards */}
           <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            {STATS.map(stat => (
+            {stats.map(stat => (
               <div key={stat.label} className="bg-white border border-[#e5e5e5] rounded-lg p-5">
                 <p className="text-[11px] uppercase tracking-[0.14em] text-[#9a9a9a]">{stat.label}</p>
                 <p className="mt-2 text-3xl font-bold tabular-nums">{stat.value}</p>
@@ -124,13 +127,15 @@ export function AdminDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {PROXIMOS.map(row => (
-                      <tr key={row.evento} className="border-b border-[#f3f3f1] last:border-0">
+                    {data.proximosEventos.length === 0 ? (
+                      <tr><td colSpan={4} className="px-5 py-6 text-center text-[#9a9a9a]">No hay eventos próximos.</td></tr>
+                    ) : data.proximosEventos.map(row => (
+                      <tr key={row.id} className="border-b border-[#f3f3f1] last:border-0">
                         <td className="px-5 py-3">
-                          <span className="font-medium">{row.evento}</span>
+                          <span className="font-medium">{row.nombre}</span>
                           <span className="block text-xs text-[#9a9a9a]">{row.tipo}</span>
                         </td>
-                        <td className="px-5 py-3 text-[#6b6b6b] whitespace-nowrap">{row.fecha}</td>
+                        <td className="px-5 py-3 text-[#6b6b6b] whitespace-nowrap">{formatFechaEvento(row.fecha)}</td>
                         <td className="px-5 py-3 text-[#6b6b6b] tabular-nums whitespace-nowrap">{row.cupos}</td>
                         <td className="px-5 py-3">
                           <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${estadoClase(row.estado)}`}>{row.estado}</span>
@@ -142,20 +147,21 @@ export function AdminDashboardPage() {
               </div>
             </section>
 
-            {/* Inscripciones por semana (barras dummy) */}
+            {/* Inscripciones por semana */}
             <section className="bg-white border border-[#e5e5e5] rounded-lg p-5">
               <h2 className="text-sm font-bold uppercase tracking-[0.12em]">Inscripciones por semana</h2>
               <div className="mt-6 flex items-end gap-4 h-40">
-                {SEMANAS.map(col => (
+                {data.inscripcionesPorSemana.map(col => (
                   <div key={col.label} className="flex-1 flex flex-col items-center gap-2">
-                    <div className="w-full bg-[#efefec] rounded-t" style={{ height: `${col.valor}%` }}>
+                    <span className="text-xs text-[#6b6b6b] tabular-nums">{col.valor}</span>
+                    <div className="w-full bg-[#efefec] rounded-t" style={{ height: `${Math.round((col.valor / maxSemana) * 100)}%` }}>
                       <div className={`w-full h-full rounded-t ${col.acento ? 'bg-[#e6bb08]' : 'bg-[#111111]'}`} />
                     </div>
                     <span className="text-[11px] text-[#9a9a9a]">{col.label}</span>
                   </div>
                 ))}
               </div>
-              <p className="mt-4 text-xs text-[#6b6b6b]">Datos de ejemplo.</p>
+              <p className="mt-4 text-xs text-[#6b6b6b]">Reservas creadas en las últimas 4 semanas.</p>
             </section>
           </div>
 
@@ -176,22 +182,23 @@ export function AdminDashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {INSCRIPCIONES.map(row => (
-                    <tr key={`${row.alumno}-${row.fecha}`} className="border-b border-[#f3f3f1] last:border-0">
+                  {data.inscripcionesRecientes.length === 0 ? (
+                    <tr><td colSpan={4} className="px-5 py-6 text-center text-[#9a9a9a]">Aún no hay inscripciones.</td></tr>
+                  ) : data.inscripcionesRecientes.map(row => (
+                    <tr key={row.id} className="border-b border-[#f3f3f1] last:border-0">
                       <td className="px-5 py-3 font-medium">{row.alumno}</td>
                       <td className="px-5 py-3 text-[#6b6b6b]">{row.evento}</td>
                       <td className="px-5 py-3">
                         <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${estadoClase(row.estado)}`}>{row.estado}</span>
                       </td>
-                      <td className="px-5 py-3 text-[#6b6b6b] whitespace-nowrap">{row.fecha}</td>
+                      <td className="px-5 py-3 text-[#6b6b6b] whitespace-nowrap">{formatFechaInscripcion(row.creadoEn)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           </section>
-
-          <p className="text-xs text-[#9a9a9a]">Panel de demostración. Los datos son de ejemplo y aún no reflejan la base real.</p>
+          </>}
         </main>
       </div>
     </div>
