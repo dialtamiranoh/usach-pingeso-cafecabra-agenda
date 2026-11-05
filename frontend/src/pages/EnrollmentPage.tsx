@@ -47,7 +47,7 @@ export function EnrollmentPage({ course, session, draft, onChange, step }: {
         allergyStatus: enrollmentData.allergyStatus, allergyDetails: enrollmentData.allergyDetails, notes: draft.notes, confirmed: draft.confirmed,
       };
       const body: FreeEnrollmentRequest | PaidEnrollmentRequest = course.requiresPayment
-        ? { ...base, payerSameAsAttendee: draft.payerSameAsAttendee, payerName: draft.payerName, payerRut: draft.payerRut, originBank: draft.originBank, accountLastFour: draft.accountLastFour }
+        ? { ...base, payerSameAsAttendee: draft.payerSameAsAttendee, payerName: draft.payerName, payerRut: draft.payerRut, originBank: draft.originBank, accountType: draft.accountType, accountLastFour: draft.accountLastFour }
         : base;
       const response = await fetch('/api/inscripciones', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(15000) });
       const saved = await response.json();
@@ -155,6 +155,7 @@ export function EnrollmentPage({ course, session, draft, onChange, step }: {
               <div><dt>Titular que pagará</dt><dd>{draft.payerSameAsAttendee ? draft.name : draft.payerName}</dd></div>
               <div><dt>RUT del titular</dt><dd>{draft.payerRut}</dd></div>
               <div><dt>Banco de origen</dt><dd>{draft.originBank}</dd></div>
+              {draft.accountType.trim() && <div><dt>Tipo de cuenta</dt><dd>{draft.accountType}</dd></div>}
               {draft.accountLastFour.trim() && <div><dt>Cuenta de origen (últimos 4 dígitos)</dt><dd>•••• {draft.accountLastFour}</dd></div>}
             </>}
             {draft.notes.trim() && <div><dt>Observaciones</dt><dd>{draft.notes}</dd></div>}

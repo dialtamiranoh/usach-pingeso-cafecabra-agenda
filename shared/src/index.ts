@@ -1,5 +1,6 @@
 // Contratos públicos, sin secretos ni acceso a datos.
 export * from './instituciones-financieras';
+export * from './tipos-cuenta';
 
 export interface CatalogEvent {
   id: string; title: string; description: string; type: string;
@@ -30,8 +31,10 @@ export interface PaidEnrollmentRequest extends FreeEnrollmentRequest {
   payerName: string;
   payerRut: string;
   originBank: string;
+  accountType: string;
   accountLastFour: string;
 }
+
 export interface TransferDetails {
   titular: string;
   rut: string;

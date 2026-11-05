@@ -2,6 +2,7 @@ import type { ChangeEvent, HTMLAttributes } from 'react';
 import type { EnrollmentDraft } from './booking-data';
 import { InstitucionSelect } from './InstitucionSelect';
 import { dietaryOptions } from './enrollment-options';
+import { TIPOS_CUENTA } from '@cafecabra/shared';
 
 interface ExtraFieldsProps {
   draft: EnrollmentDraft;
@@ -10,6 +11,8 @@ interface ExtraFieldsProps {
 }
 
 type TextFieldName = 'instagram' | 'dietaryOther' | 'allergyDetails' | 'payerName' | 'payerRut' | 'originBank' | 'accountLastFour';
+
+
 
 function ExtraField({ name, label, hint, placeholder, maxLength, multiline, required, inputMode, draft, errors, update }: ExtraFieldsProps & {
   name: TextFieldName;
@@ -74,6 +77,26 @@ function OriginBankField({ draft, errors, update }: ExtraFieldsProps) {
     error={errors.originBank} onChange={valor => update('originBank', valor)} />;
 }
 
+
+/**
+ * Campo "Tipo de cuenta", precargado con el catálogo compartido TIPOS_CUENTA. Al ser una lista
+ * corta y cerrada se usa el <select> nativo, el cual ya es accesible con teclado y lector de
+ * pantalla; el valor que se guarda en draft.accountType es el nombre canónico de la opción.
+ */
+function AccountTypeField({ draft, errors, update }: ExtraFieldsProps) {
+  const describedBy = errors.accountType ? 'accountType-error' : undefined;
+  return <div className="field">
+    <label htmlFor="accountType">Tipo de cuenta *</label>
+    <select id="accountType" name="accountType" value={draft.accountType}
+      aria-invalid={Boolean(errors.accountType)} aria-describedby={describedBy}
+      onChange={event => update('accountType', event.target.value)}>
+      <option value="">Selecciona una opción</option>
+      {TIPOS_CUENTA.map(tipo => <option key={tipo.nombre} value={tipo.nombre}>{tipo.nombre}</option>)}
+    </select>
+    {errors.accountType && <p className="field-error" id="accountType-error">{errors.accountType}</p>}
+  </div>;
+}
+
 export function TransferFields(props: ExtraFieldsProps) {
   const { draft, update } = props;
   return <fieldset className="enrollment-fieldset">
@@ -84,6 +107,7 @@ export function TransferFields(props: ExtraFieldsProps) {
       : <ExtraField {...props} name="payerName" label="Nombre completo del titular" required maxLength={120} placeholder="Nombre de quien hará el pago" />}
     <ExtraField {...props} name="payerRut" label="RUT del titular" required maxLength={12} placeholder="12.345.678-5" hint="Corresponde a quien hará la transferencia, no necesariamente a quien asiste." />
     <OriginBankField {...props} />
+    <AccountTypeField {...props} />
         <ExtraField {...props} name="accountLastFour" label="Últimos 4 dígitos de la cuenta de origen" required maxLength={4} inputMode="numeric" placeholder="1234" hint="Ayudan a identificar tu transferencia. No ingreses el número completo." />
   </fieldset>;
 }

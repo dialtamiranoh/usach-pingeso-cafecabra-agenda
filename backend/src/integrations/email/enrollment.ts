@@ -14,7 +14,7 @@ export interface EnrollmentEmailInput {
   instagram: string;
   paid: boolean;
   transfer?: TransferDetails;
-  payer?: { rut: string; bank: string; account: string };
+  payer?: { rut: string; bank: string; accountType: string; account: string };
 }
 
 function esc(value: string): string {
@@ -112,7 +112,7 @@ function adminHtml(input: EnrollmentEmailInput): string {
   ]);
   const bancarios = input.paid && input.payer
     ? dataCard('Datos bancarios declarados por el cliente', [
-        ['RUT titular', input.payer.rut], ['Banco', input.payer.bank], ['N° de cuenta', input.payer.account],
+        ['RUT titular', input.payer.rut], ['Banco', input.payer.bank], ['Tipo de cuenta', input.payer.accountType], ['N° de cuenta', input.payer.account],
       ])
     : '';
   const aviso = input.paid

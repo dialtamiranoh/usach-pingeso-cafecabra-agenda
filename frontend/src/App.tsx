@@ -8,6 +8,7 @@ import { EnrollmentPage } from './pages/EnrollmentPage';
 import type { CatalogItem } from './features/catalog/catalog-data';
 import { useCatalog } from './features/catalog/useCatalog';
 import { emptyDraft, validatePersonalDetails, type EnrollmentDraft } from './features/booking/booking-data';
+import { AdminDashboardPage } from './pages/AdminDashboardPage';
 
 function RouteAccessibility({ contentKey }: { contentKey: string }) {
   const { pathname, hash } = useLocation();
@@ -62,8 +63,11 @@ function CourseRoute({ view, drafts, onChangeDraft, catalogItems, loading, error
 }
 
 export default function App() {
+  const location = useLocation();
   const { items: catalogItems, loading, error, retry } = useCatalog();
   const [drafts, setDrafts] = useState<Record<string, EnrollmentDraft>>({});
+  // El panel de administración usa su propio layout, fuera del header público.
+  if (location.pathname.startsWith('/admin')) return <AdminDashboardPage />;
   const routeProps = { catalogItems, loading, error, retry, drafts, onChangeDraft: (key: string, draft: EnrollmentDraft) => setDrafts(previous => ({ ...previous, [key]: draft })) };
   return <SiteLayout>
     <Routes>

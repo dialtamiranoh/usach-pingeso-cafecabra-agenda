@@ -3,10 +3,10 @@ import { bodyLimit } from 'hono/body-limit';
 import { and, eq, like, sql } from 'drizzle-orm';
 import type { AppBindings } from '../config/bindings';
 import type { TransferDetails } from '@cafecabra/shared';
-import { normalizarInstitucionFinanciera } from '@cafecabra/shared';
 import { createDb } from '../db';
 import { configuracion, eventos, reservas, tipoEvento } from '../db/schema';
 import { sendEnrollmentEmails } from '../integrations/email/enrollment';
+import { normalizarInstitucionFinanciera, normalizarTipoCuenta } from '@cafecabra/shared';
 
 type DB = ReturnType<typeof createDb>;
 
@@ -124,7 +124,7 @@ enrollmentRoutes.post('/inscripciones', async c => {
   });
 
   // Envía los correos sin bloquear la respuesta si el servicio de correo falla o no está configurado.
-  async function notify(opts: { paid: boolean; transfer?: TransferDetails; payer?: { rut: string; bank: string; account: string } }) {
+  async function notify(opts: { paid: boolean; transfer?: TransferDetails; payer?: { rut: string; bank: string; accountType: string; account: string } }) {
     if (!c.env.RESEND_API_KEY) return;
     try {
       const adminEmail = await readAdminEmail(db, c.env.ADMIN_EMAIL);
@@ -173,18 +173,23 @@ enrollmentRoutes.post('/inscripciones', async c => {
   // SCRUM-91: se guarda el nombre canónico del catálogo compartido cuando se reconoce la
   // institución, con el fin de facilitar la conciliación de pagos.
   const originBank = typeof input.originBank === 'string' ? normalizarInstitucionFinanciera(input.originBank) : '';
+  // El tipo de cuenta se normaliza al nombre canónico; es informativo y no participa en la conciliación.
+  const accountType = typeof input.accountType === 'string' ? normalizarTipoCuenta(input.accountType) : '';
   const accountLastFour = typeof input.accountLastFour === 'string' ? input.accountLastFour.trim() : '';
   const titular = payerSameAsAttendee ? name : payerName;
   if ((!payerSameAsAttendee && (titular.length < 3 || titular.length > 120)) ||
-      !isValidRut(payerRut) || originBank.length < 2 || originBank.length > 80 || !/^[0-9]{4}$/.test(accountLastFour)) {
-    return c.json({ error: 'Revisa los datos de transferencia: titular, RUT, banco y últimos 4 dígitos de la cuenta.' }, 400);
+      !isValidRut(payerRut) || originBank.length < 2 || originBank.length > 80 ||
+      accountType.length < 2 || accountType.length > 40 || !/^[0-9]{4}$/.test(accountLastFour)) {
+    return c.json({ error: 'Revisa los datos de transferencia: titular, RUT, banco, tipo de cuenta y últimos 4 dígitos de la cuenta.' }, 400);
   }
+  // El tipo de cuenta no tiene columna propia; se conserva en observaciones junto al resto de datos no modelados.
+  const detailsPagado = JSON.stringify({ ...JSON.parse(details), tipoCuentaOrigen: accountType });
 
   const inserted = await db.all<{ id: number; expira_en: number }>(sql`
     INSERT OR IGNORE INTO reservas (evento_id, codigo, reservado_por_nombre, reservado_por_correo,
       reservado_por_telefono, reservado_por_rut, reservado_para_nombre, reservado_para_rut,
       banco_origen, cuenta_origen, observaciones, estado, expira_en)
-        SELECT e.id, ${code}, ${titular}, ${email}, ${phone}, ${payerRut}, ${name}, ${payerRut}, ${originBank}, ${accountLastFour}, ${details}, 'RESERVADO',
+        SELECT e.id, ${code}, ${titular}, ${email}, ${phone}, ${payerRut}, ${name}, ${payerRut}, ${originBank}, ${accountLastFour}, ${detailsPagado}, 'RESERVADO',
       unixepoch() + COALESCE((SELECT CAST(valor AS INTEGER) FROM configuracion WHERE clave='pago:plazo_horas'), 12) * 3600
     FROM eventos e JOIN tipo_evento t ON t.id=e.tipo_evento_id JOIN ubicaciones u ON u.id=e.ubicacion_id
     WHERE e.id=${eventIdNum} AND e.estado='ABIERTO' AND t.requiere_pago=1 AND e.precio>0 AND t.activo=1 AND u.activo=1
@@ -207,6 +212,6 @@ enrollmentRoutes.post('/inscripciones', async c => {
   }
 
   const transfer = await readTransfer(db, precio, inserted[0].expira_en);
-    await notify({ paid: true, transfer, payer: { rut: payerRut, bank: originBank, account: accountLastFour } });
+      await notify({ paid: true, transfer, payer: { rut: payerRut, bank: originBank, accountType, account: accountLastFour } });
   return c.json({ code, status: 'RESERVADO', eventId, transfer }, 201);
 });

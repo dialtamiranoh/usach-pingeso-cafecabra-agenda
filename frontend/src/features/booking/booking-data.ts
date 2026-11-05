@@ -28,6 +28,7 @@ export interface EnrollmentDraft {
   payerName: string;
   payerRut: string;
   originBank: string;
+  accountType: string;
   accountLastFour: string;
   notes: string;
   confirmed: boolean;
@@ -36,7 +37,7 @@ export interface EnrollmentDraft {
 export const emptyDraft: EnrollmentDraft = {
   name: '', phone: '', email: '', instagram: '', dietaryPreference: '', dietaryOther: '',
   allergyStatus: '', allergyDetails: '', payerSameAsAttendee: true, payerName: '',
-  payerRut: '', originBank: '', accountLastFour: '', notes: '', confirmed: false,
+  payerRut: '', originBank: '', accountType: '', accountLastFour: '', notes: '', confirmed: false,
 };
 
 export function validatePersonalDetails(draft: EnrollmentDraft): Partial<Record<keyof EnrollmentDraft, string>> {
@@ -60,6 +61,7 @@ export function validateTransferDetails(draft: EnrollmentDraft): Partial<Record<
     if (!draft.payerSameAsAttendee && draft.payerName.trim().length < 3) errors.payerName = 'Ingresa el nombre completo del titular que hará la transferencia.';
     if (!isValidRut(draft.payerRut)) errors.payerRut = 'Ingresa un RUT válido con dígito verificador, por ejemplo 12.345.678-5.';
     if (draft.originBank.trim().length < 2) errors.originBank = 'Indica el banco desde el que se hará la transferencia.';
+    if (draft.accountType.trim().length < 2) errors.accountType = 'Indica el tipo de cuenta desde la que se hará la transferencia.';
         if (!/^\d{4}$/.test(draft.accountLastFour.trim())) errors.accountLastFour = 'Ingresa los últimos cuatro dígitos de la cuenta.';
   return errors;
 }
