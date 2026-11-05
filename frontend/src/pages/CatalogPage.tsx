@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { heroImage, type CatalogItem } from '../features/catalog/catalog-data';
+import type { CatalogItem } from '../features/catalog/catalog-data';
+import { HeroVideo } from '../components/HeroVideo';
 import { CourseCard } from '../features/catalog/CourseCard';
 export function CatalogPage({ items: catalogItems, loading, error, retry }: { items: CatalogItem[]; loading: boolean; error: string; retry: () => void }) {
   const navigate = useNavigate();
@@ -8,7 +9,7 @@ export function CatalogPage({ items: catalogItems, loading, error, retry }: { it
       <section className="hero" id="inicio" aria-labelledby="hero-title">
         <div className="container hero-inner">
           <div><p className="eyebrow">CAFÉ CABRA · ESCUELA</p><h1 id="hero-title">Aprende el arte<br />del café.</h1><p className="hero-description">Descubre nuestros cursos y experiencias de café de especialidad. Aprende, practica y comparte tu pasión por el café.</p><a className="button button-dark" href="#cursos">Explorar cursos <span aria-hidden="true">→</span></a></div>
-          <div className="hero-photo"><img src={heroImage} alt="Café de especialidad recién preparado" fetchPriority="high" /><span>Una taza. Muchas formas de aprender.</span></div>
+          <HeroVideo />
         </div>
       </section>
       <section className="catalog container" id="cursos" aria-labelledby="catalog-title">

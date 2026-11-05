@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Breadcrumbs } from '../components/Breadcrumbs';
+import { ImageGallery } from '../components/ImageGallery';
 import { formatPrice, type CatalogItem } from '../features/catalog/catalog-data';
 
 export function CourseDetailPage({ course }: { course: CatalogItem }) {
@@ -7,7 +8,7 @@ export function CourseDetailPage({ course }: { course: CatalogItem }) {
     <main id="contenido" className="container experience-page">
       <Breadcrumbs items={[{ label: 'Cursos', to: '/#cursos' }, { label: course.title }]} />
       <section className="detail-hero" aria-labelledby="detail-title">
-        {course.image ? <img className="detail-photo" src={course.image} alt={course.imageAlt} /> : <div className="detail-photo course-placeholder">CAFÉ CABRA · ESCUELA</div>}
+        <ImageGallery key={course.id} images={course.images} title={course.title} />
         <div className="detail-copy">
           <p className="eyebrow">CAFÉ CABRA · ESCUELA</p>
           <h1 id="detail-title">{course.title}</h1>

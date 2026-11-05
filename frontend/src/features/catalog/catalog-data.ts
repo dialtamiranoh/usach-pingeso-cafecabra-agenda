@@ -23,7 +23,7 @@ export function toCatalogItem(event: CatalogEvent): CatalogItem {
     ? first && days.length === event.dates.length ? [{ ...first, courseId: event.id, id: `evento-${event.id}`, days, remainingSeats: event.remainingSeats ?? Infinity }] : []
     : days.map(day => ({ ...day, id: `fecha-${day.id}`, courseId: event.id, days: [day], remainingSeats: event.remainingSeats ?? Infinity }));
   return {
-    ...event, image: event.image ?? '', imageAlt: event.title, action: event.type === 'Curso' ? 'Ver curso' : 'Ver evento',
+    ...event, image: event.image ?? '', images: event.images?.length ? event.images : event.image ? [event.image] : [], imageAlt: event.title, action: event.type === 'Curso' ? 'Ver curso' : 'Ver evento',
     topics: event.description.split('\n').filter(line => line.startsWith('• ')).map(line => line.slice(2)),
     sessions,
   };

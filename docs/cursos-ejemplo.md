@@ -41,3 +41,11 @@ Para el intensivo de Barista se configura explícitamente `CONJUNTAS` en la tabl
 `node scripts/check-date-selection.mjs` verifica ambas alternativas de la Master Class, la selección conjunta del intensivo y el resumen antes de elegir una fecha. Requiere los servidores locales en ejecución y estas fechas de prueba.
 
 La inscripción de cursos de pago sigue siendo una demostración. La persistencia de reservas por edición y los cupos independientes por edición deben resolverse al conectar esos cursos al backend; el esquema actual de reservas solo referencia el evento, no una fecha.
+
+## Carruseles de imágenes
+
+Las tarjetas del inicio y el detalle usan una galería por actividad. La API entrega `images` desde las filas `IMAGEN` de `evento_media`, ordenadas por imagen principal, orden e ID, sin URLs repetidas. `image` conserva la portada para las pantallas compactas.
+
+El carrusel avanza automáticamente cada 4,5 segundos, con un deslizamiento de 850 ms y un retorno continuo al inicio. No muestra flechas, contador ni indicadores. Se pausa al pasar el puntero, recibir foco, ocultar la pestaña o solicitar movimiento reducido. Con una sola foto queda estático; sin imágenes muestra el bloque de marca.
+
+Para probar con las fotos provisionales ya utilizadas, ejecutar desde backend: `npx wrangler d1 execute cafe-cabra-agenda-db-dev --local --env local --file seeds/galeria-ejemplo.sql`. No reemplaza la foto principal ni duplica URLs, y no carga imágenes en Cloudflare. Las fotos definitivas se registrarán en `evento_media` para cada actividad.

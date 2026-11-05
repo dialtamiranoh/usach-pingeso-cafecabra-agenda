@@ -8,6 +8,7 @@ export interface CatalogEvent {
   price: number; capacity: number | null; remainingSeats: number | null;
   requiresPayment: boolean; location: string; instructors: string[];
   includes: string; certificate: boolean; image: string | null;
+  images: string[];
   dateMode: 'INDEPENDIENTES' | 'CONJUNTAS';
   dates: { id: string; date: string; schedule: string | null }[];
 }

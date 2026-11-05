@@ -32,11 +32,13 @@ export async function listEvents(database: D1Database, localPreview: boolean): P
   if (!events.length) return [];
   const ids = events.map(event => event.id);
   const placeholders = ids.map(() => '?').join(',');
-  const [dates, teachers] = await Promise.all([
+  const [dates, teachers, media] = await Promise.all([
     database.prepare(`SELECT id, evento_id, fecha, horario FROM fechas WHERE evento_id IN (${placeholders}) ORDER BY fecha, id`).bind(...ids)
       .all<{ id: number; evento_id: number; fecha: string; horario: string | null }>(),
     database.prepare(`SELECT ei.evento_id, i.nombre FROM evento_instructores ei JOIN instructores i ON i.id=ei.instructor_id WHERE ei.evento_id IN (${placeholders}) ORDER BY i.nombre`).bind(...ids)
       .all<{ evento_id: number; nombre: string }>(),
+    database.prepare(`SELECT evento_id, url FROM evento_media WHERE evento_id IN (${placeholders}) AND tipo='IMAGEN' ORDER BY es_principal DESC, orden, id`).bind(...ids)
+      .all<{ evento_id: number; url: string }>(),
   ]);
   return events.map(event => ({
     id: String(event.id), title: event.nombre, description: event.descripcion ?? '',
@@ -45,6 +47,7 @@ export async function listEvents(database: D1Database, localPreview: boolean): P
     requiresPayment: Boolean(event.requiere_pago), location: [event.lugar, event.direccion].filter(Boolean).join(' · '),
     instructors: teachers.results.filter(row => row.evento_id === event.id).map(row => row.nombre),
     includes: event.incluye ?? '', certificate: Boolean(event.incluye_certificado), image: event.imagen,
+    images: [...new Set(media.results.filter(row => row.evento_id === event.id).map(row => row.url))],
     dateMode: event.modalidad_fechas === 'CONJUNTAS' ? 'CONJUNTAS' : 'INDEPENDIENTES',
     dates: dates.results.filter(row => row.evento_id === event.id).map(row => ({ id: String(row.id), date: row.fecha, schedule: row.horario })),
   }));
