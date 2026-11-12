@@ -8,11 +8,14 @@ import { enrollmentRoutes } from './routes/enrollments';
 import { expireReservations } from './jobs/expire';
 import { adminRoutes } from './routes/admin';
 export { AgendaHub } from './realtime/AgendaHub';
+import { mantenedorRoutes } from './routes/mantenedores';
+
 
 const app = new Hono<{ Bindings: AppBindings }>();
 app.route('/api', catalogRoutes);
 app.route('/api', enrollmentRoutes);
 app.route('/api', adminRoutes);
+app.route('/api', mantenedorRoutes);
 
 app.get('/api/health', async c => {
   const body = await checkHealth(c.env);

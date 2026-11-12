@@ -42,6 +42,33 @@ export interface AdminEstadoConteo {
   label: string;
   valor: number;
 }
+// --- Mantenedores (RF-31) ---
+export interface Ubicacion {
+  id: number;
+  nombre: string;
+  direccion: string | null;
+  referencia: string | null;
+  activo: boolean;
+}
+export interface TipoEvento {
+  id: number;
+  nombre: string;
+  requierePago: boolean;
+  activo: boolean;
+}
+export interface Instructor {
+  id: number;
+  nombre: string;
+  bio: string | null;
+  fotoUrl: string | null;
+  email: string | null;
+  activo: boolean;
+}
+export interface OpcionAlimentaria {
+  id: number;
+  nombre: string;
+  activo: boolean;
+}
 
 // --- Tiempo real (WebSocket / Pub-Sub) ---
 export type RealtimeTipo = 'RESERVA_NUEVA' | 'CUPO_CAMBIO' | 'RESERVA_EXPIRADA';

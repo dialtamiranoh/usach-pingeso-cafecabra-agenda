@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import type { ChartConfiguration } from 'chart.js/auto';
 import { useAdminPanel, formatFechaEvento, formatFechaInscripcion, formatMonto } from '../features/admin/useAdminPanel';
 import { ChartCanvas } from '../features/admin/ChartCanvas';
+import { MantenedoresPage } from './MantenedoresPage';
 
 // Panel de administración. Portado del template analytics-dashboard de HyperUI
 // (sidebar colapsable, tarjetas, gráfico de línea, dona y tabla) con Chart.js,
@@ -201,6 +202,7 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
         </header>
 
         <main className="flex-1 space-y-6 p-6">
+          {active === 'mantenedores' ? <MantenedoresPage /> : <>
           {loading && <p className="text-sm text-[#6b6b6b]">Cargando panel...</p>}
 
           {error && !loading && (
@@ -269,6 +271,7 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
               </table>
             </div>
           </div>
+          </>}
           </>}
         </main>
       </div>
