@@ -43,6 +43,16 @@ export interface AdminEstadoConteo {
   valor: number;
 }
 
+// --- Tiempo real (WebSocket / Pub-Sub) ---
+export type RealtimeTipo = 'RESERVA_NUEVA' | 'CUPO_CAMBIO' | 'RESERVA_EXPIRADA';
+export interface RealtimeEvento {
+  tipo: RealtimeTipo;
+  eventId?: string;       // Evento afectado, cuando aplica.
+  titulo?: string;        // Nombre del curso/evento, para mostrar en la notificación.
+  detalle?: string;       // Texto corto para la campanita (ej. nombre del inscrito).
+  ts: number;             // epoch en ms del momento del evento.
+}
+
 export interface AdminPanelResponse {
   stats: {
     eventosActivos: number;

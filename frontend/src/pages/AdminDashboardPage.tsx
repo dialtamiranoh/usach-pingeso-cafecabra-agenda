@@ -1,3 +1,7 @@
+import { useRealtime } from '../features/admin/useRealtime';
+
+interface Notificacion { id: number; texto: string; ts: number; }
+
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { ChartConfiguration } from 'chart.js/auto';
@@ -39,6 +43,24 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
   const [active, setActive] = useState('panel');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data, loading, error, retry } = useAdminPanel();
+
+    // Campanita y tiempo real.
+  const [notis, setNotis] = useState<Notificacion[]>([]);
+  const [noLeidas, setNoLeidas] = useState(0);
+  const [campanitaAbierta, setCampanitaAbierta] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useRealtime(evento => {
+    // Cualquier evento refresca los datos del panel en vivo.
+    retry();
+    if (evento.tipo === 'RESERVA_NUEVA') {
+      const texto = `Nueva inscripción${evento.detalle ? `: ${evento.detalle}` : ''}${evento.titulo ? ` en ${evento.titulo}` : ''}`;
+      setNotis(prev => [{ id: evento.ts, texto, ts: evento.ts }, ...prev].slice(0, 20));
+      setNoLeidas(n => n + 1);
+      setToast(texto);
+      window.setTimeout(() => setToast(null), 5000);
+    }
+  });
 
   const semanaLabels = data ? data.inscripcionesPorSemana.map(s => s.label) : [];
   const semanaValores = data ? data.inscripcionesPorSemana.map(s => s.valor) : [];
@@ -133,6 +155,42 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
             <h1 className="text-lg font-semibold text-[#111111]">Panel</h1>
           </div>
           <div className="flex items-center gap-3">
+            {/* Campanita */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => { setCampanitaAbierta(v => !v); setNoLeidas(0); }}
+                className="relative rounded-md p-2 text-[#6b6b6b] transition-colors hover:bg-[#f5f5f4]"
+                aria-label="Notificaciones"
+              >
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {noLeidas > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 grid min-w-4 place-items-center rounded-full bg-[#e6bb08] px-1 text-[10px] font-bold text-[#111111]">
+                    {noLeidas > 9 ? '9+' : noLeidas}
+                  </span>
+                )}
+              </button>
+              {campanitaAbierta && (
+                <div className="absolute end-0 z-50 mt-2 w-72 rounded-lg border border-[#e5e5e5] bg-white shadow-lg">
+                  <div className="border-b border-[#e5e5e5] px-4 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-[#9a9a9a]">Notificaciones</div>
+                  {notis.length === 0 ? (
+                    <p className="px-4 py-6 text-center text-sm text-[#9a9a9a]">Sin notificaciones.</p>
+                  ) : (
+                    <ul className="max-h-80 overflow-y-auto divide-y divide-[#f3f3f1]">
+                      {notis.map(n => (
+                        <li key={n.id} className="px-4 py-3 text-sm">
+                          <p className="text-[#111111]">{n.texto}</p>
+                          <p className="mt-0.5 text-xs text-[#9a9a9a]">{formatFechaInscripcion(Math.floor(n.ts / 1000))}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+
             <span className="hidden sm:inline text-sm text-[#6b6b6b]">{email ?? 'Administrador'}</span>
             {onLogout && (
               <button type="button" onClick={onLogout} className="rounded-md bg-[#111111] px-4 py-2 text-sm font-medium text-white transition hover:bg-black">
@@ -214,6 +272,12 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
           </>}
         </main>
       </div>
+
+      {toast && (
+        <div className="fixed bottom-4 end-4 z-50 max-w-xs rounded-lg border border-[#e5e5e5] bg-white px-4 py-3 shadow-lg">
+          <p className="text-sm font-medium text-[#111111]">{toast}</p>
+        </div>
+      )}
     </div>
   );
 }

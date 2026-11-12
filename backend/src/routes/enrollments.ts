@@ -7,6 +7,7 @@ import { createDb } from '../db';
 import { configuracion, eventos, reservas, tipoEvento } from '../db/schema';
 import { sendEnrollmentEmails } from '../integrations/email/enrollment';
 import { normalizarInstitucionFinanciera, normalizarTipoCuenta } from '@cafecabra/shared';
+import { publicarEvento } from '../realtime/publish';
 
 type DB = ReturnType<typeof createDb>;
 
@@ -162,6 +163,7 @@ enrollmentRoutes.post('/inscripciones', async c => {
       return c.json({ error: 'No pudimos inscribirte: el evento no está disponible, no quedan cupos o ya existe una inscripción con tus datos.' }, 409);
     }
     await notify({ paid: false });
+    await publicarEvento(c.env, { tipo: 'RESERVA_NUEVA', eventId, titulo, detalle: name, ts: Date.now() });
     return c.json({ code, status: 'CONFIRMADO', eventId }, 201);
   }
 
@@ -212,6 +214,7 @@ enrollmentRoutes.post('/inscripciones', async c => {
   }
 
   const transfer = await readTransfer(db, precio, inserted[0].expira_en);
-      await notify({ paid: true, transfer, payer: { rut: payerRut, bank: originBank, accountType, account: accountLastFour } });
+    await notify({ paid: true, transfer, payer: { rut: payerRut, bank: originBank, accountType, account: accountLastFour } });
+  await publicarEvento(c.env, { tipo: 'RESERVA_NUEVA', eventId, titulo, detalle: name, ts: Date.now() });
   return c.json({ code, status: 'RESERVADO', eventId, transfer }, 201);
 });
