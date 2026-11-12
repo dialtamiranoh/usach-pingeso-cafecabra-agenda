@@ -14,8 +14,8 @@ import { AdminGate } from './pages/AdminGate';
 function RouteAccessibility({ contentKey }: { contentKey: string }) {
   const { pathname, hash } = useLocation();
   useEffect(() => {
-    const heading = document.querySelector<HTMLElement>('main h1');
-    document.title = `${heading?.innerText.replace(/\s+/g, ' ').trim() ?? 'Página no encontrada'} | Café Cabra`;
+    const heading = document.querySelector<HTMLElement>('main h1')
+                document.title = `${heading?.innerText.replace(/\s+/g, ' ').trim() ?? 'Página no encontrada'} Café Cabra Escuela - Catálogo`;
     if (hash) {
       document.getElementById(hash.slice(1))?.scrollIntoView();
     } else {
