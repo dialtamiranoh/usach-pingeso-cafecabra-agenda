@@ -58,6 +58,14 @@
       "migrations_dir": "migrations"
     }
   ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "AGENDA_HUB", "class_name": "AgendaHub" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["AgendaHub"] }
+  ],
   "env": {
     "staging": {
       "name": "usach-pingeso-cafecabra-agenda-dev",
@@ -84,6 +92,14 @@
           "migrations_dir": "migrations"
         }
       ],
+      "durable_objects": {
+        "bindings": [
+          { "name": "AGENDA_HUB", "class_name": "AgendaHub" }
+        ]
+      },
+      "migrations": [
+        { "tag": "v1", "new_sqlite_classes": ["AgendaHub"] }
+      ],
       "images": {
         "binding": "IMAGES"
       }
@@ -109,6 +125,14 @@
           "database_id": "bb597bc4-21dd-4558-a27a-a0e9f311eaf1",
           "migrations_dir": "migrations"
         }
+      ],
+      "durable_objects": {
+        "bindings": [
+          { "name": "AGENDA_HUB", "class_name": "AgendaHub" }
+        ]
+      },
+      "migrations": [
+        { "tag": "v1", "new_sqlite_classes": ["AgendaHub"] }
       ],
       "images": {
         "binding": "IMAGES"
