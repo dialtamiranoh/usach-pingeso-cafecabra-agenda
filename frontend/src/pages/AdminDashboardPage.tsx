@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import type { ChartConfiguration } from 'chart.js/auto';
 import { useAdminPanel, formatFechaEvento, formatFechaInscripcion, formatMonto } from '../features/admin/useAdminPanel';
+import { ChartCanvas } from '../features/admin/ChartCanvas';
 
-// Panel de administración. Estética minimalista estilo HyperUI.
-// Paleta: negro, blanco y acento #e6bb08. Datos reales desde /api/admin/panel.
+// Panel de administración. Portado del template analytics-dashboard de HyperUI
+// (sidebar colapsable, tarjetas, gráfico de línea, dona y tabla) con Chart.js,
+// adaptado a la paleta negro / blanco / #e6bb08 y a los datos reales de /api/admin/panel.
 
 const NAV = [
   { key: 'panel', label: 'Panel' },
@@ -14,13 +17,17 @@ const NAV = [
   { key: 'configuracion', label: 'Configuración' },
 ];
 
+// Colores de la dona por estado de reserva.
+const COLORES_ESTADO: Record<string, string> = {
+  Confirmado: '#111111', Reservado: '#e6bb08', Expirado: '#d4d4d4', 'En espera': '#9a9a9a', Cancelado: '#8a8378',
+};
+
 function estadoClase(estado: string): string {
   if (estado === 'Confirmado' || estado === 'Abierto') return 'bg-[#fdf3c9] text-[#7a6200]';
   if (estado === 'Reservado' || estado === 'En espera') return 'bg-[#f1f1ef] text-[#555]';
   return 'bg-[#eceae4] text-[#8a8378]';
 }
 
-// Arma el detalle de la tarjeta de eventos activos: "2 cursos, 1 cata".
 function detalleEventos(cursos: number, catas: number): string {
   const partes: string[] = [];
   if (cursos > 0) partes.push(`${cursos} ${cursos === 1 ? 'curso' : 'cursos'}`);
@@ -28,176 +35,182 @@ function detalleEventos(cursos: number, catas: number): string {
   return partes.length ? partes.join(', ') : 'Sin eventos activos';
 }
 
-export function AdminDashboardPage() {
+export function AdminDashboardPage({ email, onLogout }: { email?: string | null; onLogout?: () => void } = {}) {
   const [active, setActive] = useState('panel');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data, loading, error, retry } = useAdminPanel();
 
+  const semanaLabels = data ? data.inscripcionesPorSemana.map(s => s.label) : [];
+  const semanaValores = data ? data.inscripcionesPorSemana.map(s => s.valor) : [];
+
+  // Sparkline de la tarjeta de monto (inscripciones por semana, sin ejes).
+  const sparklineConfig = useMemo<ChartConfiguration>(() => ({
+    type: 'line',
+    data: { labels: semanaLabels, datasets: [{ data: semanaValores, borderColor: '#e6bb08', borderWidth: 2, pointRadius: 0, tension: 0.35, fill: false }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } } },
+  }), [semanaLabels.join(), semanaValores.join()]);
+
+  // Gráfico de línea principal: inscripciones por semana.
+  const lineConfig = useMemo<ChartConfiguration>(() => ({
+    type: 'line',
+    data: { labels: semanaLabels, datasets: [{ label: 'Inscripciones', data: semanaValores, borderColor: '#111111', backgroundColor: 'rgba(17,17,17,0.08)', borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, pointHoverBackgroundColor: '#111111', pointHoverBorderColor: '#ffffff', pointHoverBorderWidth: 2, tension: 0.35, fill: true }] },
+    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: '#6b6b6b' } }, y: { beginAtZero: true, grid: { color: '#eeeeee' }, ticks: { color: '#6b6b6b', precision: 0 } } } },
+  }), [semanaLabels.join(), semanaValores.join()]);
+
+  // Dona: reservas por estado.
+  const estadoLabels = data ? data.reservasPorEstado.map(e => e.label) : [];
+  const estadoValores = data ? data.reservasPorEstado.map(e => e.valor) : [];
+  const donutConfig = useMemo<ChartConfiguration>(() => ({
+    type: 'doughnut',
+    data: { labels: estadoLabels, datasets: [{ data: estadoValores, backgroundColor: estadoLabels.map(l => COLORES_ESTADO[l] ?? '#cccccc'), borderColor: '#ffffff', borderWidth: 2 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { color: '#6b6b6b' } } } },
+  }), [estadoLabels.join(), estadoValores.join()]);
+
   const stats = data ? [
-    { label: 'Eventos activos', value: String(data.stats.eventosActivos), hint: detalleEventos(data.stats.cursosActivos, data.stats.catasActivos) },
-    { label: 'Inscritos del mes', value: String(data.stats.inscritosMes), hint: 'Reservas activas del mes' },
-    { label: 'Reservas pendientes', value: String(data.stats.reservasPendientes), hint: 'A la espera de pago' },
-    { label: 'Monto reservado del mes', value: formatMonto(data.stats.montoReservadoMes), hint: 'Reservas activas, sin conciliar' },
+    { label: 'Monto reservado del mes', value: formatMonto(data.stats.montoReservadoMes), hint: 'Reservas activas, sin conciliar', spark: true },
+    { label: 'Inscritos del mes', value: String(data.stats.inscritosMes), hint: 'Reservas activas del mes', spark: false },
+    { label: 'Reservas pendientes', value: String(data.stats.reservasPendientes), hint: 'A la espera de pago', spark: false },
+    { label: 'Eventos activos', value: String(data.stats.eventosActivos), hint: detalleEventos(data.stats.cursosActivos, data.stats.catasActivos), spark: false },
   ] : [];
 
-  const maxSemana = data ? Math.max(1, ...data.inscripcionesPorSemana.map(s => s.valor)) : 1;
-
   return (
-    <div className="min-h-screen flex bg-[#f5f5f4] text-[#111111] font-sans">
+    <div className="flex h-screen overflow-hidden bg-[#f5f5f4] text-[#111111] font-sans">
+      {/* Overlay móvil */}
+      {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} aria-hidden="true" />}
+
       {/* Sidebar */}
-      <aside className="hidden md:flex w-60 shrink-0 flex-col bg-[#111111] text-white">
-        <div className="h-16 flex items-center px-6 border-b border-white/10">
-          <span className="text-sm font-bold tracking-[0.18em] uppercase">Café Cabra</span>
+      <div className={`fixed inset-y-0 start-0 z-40 flex w-64 flex-col justify-between overflow-y-auto border-e border-[#e5e5e5] bg-white transition-transform duration-300 lg:static lg:shrink-0 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-4">
+          <span className="grid h-12 place-content-center rounded-lg bg-[#111111] text-sm font-bold tracking-[0.18em] uppercase text-white">Café Cabra</span>
+          <nav aria-label="Panel" className="mt-4">
+            <ul className="space-y-1">
+              {NAV.map(item => (
+                <li key={item.key}>
+                  <button
+                    type="button"
+                    onClick={() => { setActive(item.key); setSidebarOpen(false); }}
+                    className={`block w-full text-left rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                      active === item.key
+                        ? 'border-s-2 border-[#e6bb08] bg-[#f5f5f4] text-[#111111]'
+                        : 'text-[#6b6b6b] hover:bg-[#f5f5f4] hover:text-[#111111]'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
-        <nav className="flex-1 px-2 py-5 space-y-1">
-          {NAV.map(item => (
-            <button
-              key={item.key}
-              type="button"
-              onClick={() => setActive(item.key)}
-              className={`w-full text-left pl-3 pr-3 py-2 rounded text-sm border-l-[3px] transition-colors ${
-                active === item.key
-                  ? 'border-[#e6bb08] bg-white/5 text-white font-semibold'
-                  : 'border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </nav>
-        <div className="px-2 py-5 border-t border-white/10">
-          <Link to="/" className="block px-3 py-2 rounded text-sm text-white/60 hover:bg-white/5 hover:text-white">
-            ← Volver al sitio
-          </Link>
+        <div className="sticky inset-x-0 bottom-0 border-t border-[#e5e5e5]">
+          <div className="flex items-center gap-2 bg-white p-4">
+            <span className="size-10 rounded-full bg-[#111111] text-white grid place-items-center text-sm font-semibold">
+              {(email ?? 'A').slice(0, 2).toUpperCase()}
+            </span>
+            <p className="text-xs text-[#111111] min-w-0">
+              <strong className="block font-medium">Administrador</strong>
+              <span className="block truncate text-[#6b6b6b]">{email ?? ''}</span>
+            </p>
+          </div>
+          <Link to="/" className="block border-t border-[#e5e5e5] p-4 text-xs text-[#6b6b6b] hover:bg-[#f5f5f4]">← Volver al sitio</Link>
         </div>
-      </aside>
+      </div>
 
       {/* Contenido */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Topbar */}
-        <header className="h-16 shrink-0 bg-white border-b border-[#e5e5e5] flex items-center justify-between px-5 sm:px-8">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.16em] text-[#9a9a9a]">Administración</p>
-            <h1 className="text-lg font-bold -mt-0.5">Panel</h1>
+      <div className="flex flex-1 flex-col overflow-y-auto">
+        <header className="flex items-center justify-between border-b border-[#e5e5e5] bg-white px-6 py-4">
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(v => !v)}
+              className="cursor-pointer rounded-md p-2 text-[#6b6b6b] transition-colors hover:bg-[#f5f5f4] lg:hidden"
+              aria-label="Abrir menú"
+            >
+              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <h1 className="text-lg font-semibold text-[#111111]">Panel</h1>
           </div>
           <div className="flex items-center gap-3">
-            <span className="hidden sm:inline text-sm text-[#6b6b6b]">diego.altamirano.h@usach.cl</span>
-            <span className="h-9 w-9 rounded-full bg-[#111111] text-white grid place-items-center text-sm font-semibold">DA</span>
+            <span className="hidden sm:inline text-sm text-[#6b6b6b]">{email ?? 'Administrador'}</span>
+            {onLogout && (
+              <button type="button" onClick={onLogout} className="rounded-md bg-[#111111] px-4 py-2 text-sm font-medium text-white transition hover:bg-black">
+                Cerrar sesión
+              </button>
+            )}
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-5 sm:p-8 space-y-8">
+        <main className="flex-1 space-y-6 p-6">
           {loading && <p className="text-sm text-[#6b6b6b]">Cargando panel...</p>}
 
           {error && !loading && (
-            <div className="bg-white border border-[#e5e5e5] rounded-lg p-6">
+            <article className="rounded-lg border border-[#e5e5e5] bg-white p-6">
               <p className="text-sm text-[#b3261e]" role="alert">{error}</p>
-              <button type="button" onClick={retry} className="mt-3 inline-block rounded bg-[#111111] text-white text-sm font-semibold px-4 py-2 hover:bg-black">
-                Reintentar
-              </button>
-            </div>
+              <button type="button" onClick={retry} className="mt-3 inline-block rounded-md bg-[#111111] px-4 py-2 text-sm font-medium text-white transition hover:bg-black">Reintentar</button>
+            </article>
           )}
 
           {data && !loading && !error && <>
-          {/* Stat cards */}
-          <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          {/* Tarjetas */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {stats.map(stat => (
-              <div key={stat.label} className="bg-white border border-[#e5e5e5] rounded-lg p-5">
-                <p className="text-[11px] uppercase tracking-[0.14em] text-[#9a9a9a]">{stat.label}</p>
-                <p className="mt-2 text-3xl font-bold tabular-nums">{stat.value}</p>
-                <p className="mt-1 text-xs text-[#6b6b6b]">{stat.hint}</p>
-              </div>
+              <article key={stat.label} className="flex flex-col gap-4 rounded-lg border border-[#e5e5e5] bg-white p-6">
+                <div>
+                  <strong className="block text-sm font-medium text-[#6b6b6b]">{stat.label}</strong>
+                  <p className="mt-1"><span className="text-2xl font-semibold text-[#111111] tabular-nums">{stat.value}</span></p>
+                  <p className="mt-1 text-xs text-[#9a9a9a]">{stat.hint}</p>
+                </div>
+                {stat.spark && <div className="h-10"><ChartCanvas config={sparklineConfig} ariaLabel="Tendencia de inscripciones por semana" className="!h-10 !w-full" /></div>}
+              </article>
             ))}
-          </section>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Próximos eventos */}
-            <section className="lg:col-span-2 bg-white border border-[#e5e5e5] rounded-lg overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-[#e5e5e5]">
-                <h2 className="text-sm font-bold uppercase tracking-[0.12em]">Próximos eventos</h2>
-                <button type="button" className="text-xs font-semibold text-[#111111] hover:underline">Ver todos</button>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-[11px] uppercase tracking-[0.1em] text-[#9a9a9a] border-b border-[#eeeeee]">
-                      <th className="font-medium px-5 py-3">Evento</th>
-                      <th className="font-medium px-5 py-3">Fecha</th>
-                      <th className="font-medium px-5 py-3">Cupos</th>
-                      <th className="font-medium px-5 py-3">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.proximosEventos.length === 0 ? (
-                      <tr><td colSpan={4} className="px-5 py-6 text-center text-[#9a9a9a]">No hay eventos próximos.</td></tr>
-                    ) : data.proximosEventos.map(row => (
-                      <tr key={row.id} className="border-b border-[#f3f3f1] last:border-0">
-                        <td className="px-5 py-3">
-                          <span className="font-medium">{row.nombre}</span>
-                          <span className="block text-xs text-[#9a9a9a]">{row.tipo}</span>
-                        </td>
-                        <td className="px-5 py-3 text-[#6b6b6b] whitespace-nowrap">{formatFechaEvento(row.fecha)}</td>
-                        <td className="px-5 py-3 text-[#6b6b6b] tabular-nums whitespace-nowrap">{row.cupos}</td>
-                        <td className="px-5 py-3">
-                          <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${estadoClase(row.estado)}`}>{row.estado}</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            {/* Inscripciones por semana */}
-            <section className="bg-white border border-[#e5e5e5] rounded-lg p-5">
-              <h2 className="text-sm font-bold uppercase tracking-[0.12em]">Inscripciones por semana</h2>
-              <div className="mt-6 flex items-end gap-4 h-40">
-                {data.inscripcionesPorSemana.map(col => (
-                  <div key={col.label} className="flex-1 flex flex-col items-center gap-2">
-                    <span className="text-xs text-[#6b6b6b] tabular-nums">{col.valor}</span>
-                    <div className="w-full bg-[#efefec] rounded-t" style={{ height: `${Math.round((col.valor / maxSemana) * 100)}%` }}>
-                      <div className={`w-full h-full rounded-t ${col.acento ? 'bg-[#e6bb08]' : 'bg-[#111111]'}`} />
-                    </div>
-                    <span className="text-[11px] text-[#9a9a9a]">{col.label}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-4 text-xs text-[#6b6b6b]">Reservas creadas en las últimas 4 semanas.</p>
-            </section>
           </div>
 
-          {/* Últimas inscripciones */}
-          <section className="bg-white border border-[#e5e5e5] rounded-lg overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#e5e5e5]">
-              <h2 className="text-sm font-bold uppercase tracking-[0.12em]">Últimas inscripciones</h2>
-              <button type="button" className="text-xs font-semibold text-[#111111] hover:underline">Ver todas</button>
+          {/* Línea + dona */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className="rounded-lg border border-[#e5e5e5] bg-white p-6 lg:col-span-2">
+              <h2 className="text-sm font-medium text-[#111111]">Inscripciones por semana</h2>
+              <div className="mt-4 h-64"><ChartCanvas config={lineConfig} ariaLabel="Gráfico de inscripciones por semana" className="!h-64 !w-full" /></div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-[11px] uppercase tracking-[0.1em] text-[#9a9a9a] border-b border-[#eeeeee]">
-                    <th className="font-medium px-5 py-3">Alumno</th>
-                    <th className="font-medium px-5 py-3">Evento</th>
-                    <th className="font-medium px-5 py-3">Estado</th>
-                    <th className="font-medium px-5 py-3">Fecha</th>
+            <div className="rounded-lg border border-[#e5e5e5] bg-white p-6">
+              <h2 className="text-sm font-medium text-[#111111]">Reservas por estado</h2>
+              {estadoValores.some(v => v > 0)
+                ? <div className="mt-4 h-64"><ChartCanvas config={donutConfig} ariaLabel="Distribución de reservas por estado" className="!h-64 !w-full" /></div>
+                : <p className="mt-4 text-sm text-[#9a9a9a]">Aún no hay reservas.</p>}
+            </div>
+          </div>
+
+          {/* Tabla: últimas inscripciones */}
+          <div className="rounded-lg border border-[#e5e5e5] bg-white p-6">
+            <h2 className="text-sm font-medium text-[#111111]">Últimas inscripciones</h2>
+            <div className="mt-4 overflow-x-auto">
+              <table className="min-w-full divide-y-2 divide-[#e5e5e5] text-sm">
+                <thead className="text-left">
+                  <tr className="*:font-medium *:text-[#111111]">
+                    <th className="px-3 py-2 whitespace-nowrap">Alumno</th>
+                    <th className="px-3 py-2 whitespace-nowrap">Evento</th>
+                    <th className="px-3 py-2 whitespace-nowrap">Estado</th>
+                    <th className="px-3 py-2 whitespace-nowrap">Fecha</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-[#e5e5e5]">
                   {data.inscripcionesRecientes.length === 0 ? (
-                    <tr><td colSpan={4} className="px-5 py-6 text-center text-[#9a9a9a]">Aún no hay inscripciones.</td></tr>
+                    <tr><td colSpan={4} className="px-3 py-6 text-center text-[#9a9a9a]">Aún no hay inscripciones.</td></tr>
                   ) : data.inscripcionesRecientes.map(row => (
-                    <tr key={row.id} className="border-b border-[#f3f3f1] last:border-0">
-                      <td className="px-5 py-3 font-medium">{row.alumno}</td>
-                      <td className="px-5 py-3 text-[#6b6b6b]">{row.evento}</td>
-                      <td className="px-5 py-3">
-                        <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${estadoClase(row.estado)}`}>{row.estado}</span>
+                    <tr key={row.id}>
+                      <td className="px-3 py-2 whitespace-nowrap font-medium text-[#111111]">{row.alumno}</td>
+                      <td className="px-3 py-2 whitespace-nowrap text-[#6b6b6b]">{row.evento}</td>
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${estadoClase(row.estado)}`}>{row.estado}</span>
                       </td>
-                      <td className="px-5 py-3 text-[#6b6b6b] whitespace-nowrap">{formatFechaInscripcion(row.creadoEn)}</td>
+                      <td className="px-3 py-2 whitespace-nowrap text-[#6b6b6b]">{formatFechaInscripcion(row.creadoEn)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </section>
+          </div>
           </>}
         </main>
       </div>

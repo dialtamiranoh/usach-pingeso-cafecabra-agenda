@@ -37,6 +37,12 @@ export interface AdminSemana {
   valor: number;
   acento: boolean;
 }
+
+export interface AdminEstadoConteo {
+  label: string;
+  valor: number;
+}
+
 export interface AdminPanelResponse {
   stats: {
     eventosActivos: number;
@@ -49,6 +55,7 @@ export interface AdminPanelResponse {
   proximosEventos: AdminEventoProximo[];
   inscripcionesRecientes: AdminInscripcionReciente[];
   inscripcionesPorSemana: AdminSemana[];
+  reservasPorEstado: AdminEstadoConteo[];
 }
 
 export interface FreeEnrollmentRequest {

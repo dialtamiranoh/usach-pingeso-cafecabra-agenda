@@ -1,10 +1,53 @@
 import { Hono } from 'hono';
 import { sql } from 'drizzle-orm';
 import type { AppBindings } from '../config/bindings';
-import type { AdminPanelResponse, AdminEventoProximo, AdminInscripcionReciente, AdminSemana } from '@cafecabra/shared';
 import { createDb } from '../db';
+import { createAuth } from '../auth';
+import type { AdminPanelResponse, AdminEventoProximo, AdminInscripcionReciente, AdminSemana, AdminEstadoConteo } from '@cafecabra/shared';
 
 export const adminRoutes = new Hono<{ Bindings: AppBindings }>();
+
+// Devuelve la sesión de Better Auth si el pedido trae una cookie válida, o null si no.
+// Como el registro público está cerrado y solo existen cuentas de administrador, tener
+// sesión equivale a ser admin.
+async function getAdminSession(env: AppBindings, headers: Headers) {
+  try {
+    return await createAuth(env).api.getSession({ headers });
+  } catch {
+    return null;
+  }
+}
+
+// Estado de sesión para el frontend. Responde 200 siempre, para que el guard no trate
+// la falta de sesión como un error de red.
+adminRoutes.get('/admin/sesion', async c => {
+  const sesion = await getAdminSession(c.env, c.req.raw.headers);
+  return c.json({ authenticated: Boolean(sesion), email: sesion?.user.email ?? null });
+});
+
+// Alta controlada del primer administrador. Solo funciona con el token correcto y mientras
+// no exista ningún usuario, de modo que no se pueda reutilizar para crear admins extra.
+adminRoutes.post('/admin/bootstrap', async c => {
+  const token = c.req.header('x-bootstrap-token');
+  if (!c.env.ADMIN_BOOTSTRAP_TOKEN || token !== c.env.ADMIN_BOOTSTRAP_TOKEN) {
+    return c.json({ error: 'No autorizado' }, 401);
+  }
+  const db = createDb(c.env.cafe_cabra_agenda_db);
+  const existe = await db.all(sql`SELECT 1 FROM user LIMIT 1`);
+  if (existe.length > 0) return c.json({ error: 'Ya existe al menos un administrador.' }, 409);
+
+  let body: { email?: unknown; password?: unknown; name?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: 'JSON inválido.' }, 400); }
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  const password = typeof body.password === 'string' ? body.password : '';
+  const name = typeof body.name === 'string' ? body.name.trim() : '';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password.length < 8 || name.length < 2) {
+    return c.json({ error: 'Datos inválidos: correo, nombre y contraseña de al menos 8 caracteres.' }, 400);
+  }
+
+  await createAuth(c.env, { allowSignUp: true }).api.signUpEmail({ body: { email, password, name } });
+  return c.json({ ok: true, email }, 201);
+});
 
 // Reserva "activa": confirmada, o reservada dentro de su plazo de pago. Misma lógica que el
 // flujo de inscripción, para que los conteos del panel no incluyan reservas vencidas.
@@ -33,8 +76,9 @@ function textoCupos(controlaCupo: number, cupoMaximo: number | null, ocupados: n
 }
 
 adminRoutes.get('/admin/panel', async c => {
-  // Panel de evaluación: disponible solo en local y staging, nunca en producción.
-  if (!['local', 'staging'].includes(c.env.APP_ENV)) return c.json({ error: 'Ruta no encontrada' }, 404);
+  // Panel privado: requiere sesión de administrador.
+  const sesion = await getAdminSession(c.env, c.req.raw.headers);
+  if (!sesion) return c.json({ error: 'No autorizado' }, 401);
 
   const db = createDb(c.env.cafe_cabra_agenda_db);
 
@@ -100,6 +144,15 @@ adminRoutes.get('/admin/panel', async c => {
     label: `Sem ${indice + 1}`, valor: porOffset.get(offset) ?? 0, acento: offset === 0,
   }));
 
+
+    // --- Reservas por estado (para el gráfico de dona) ---
+  const estadoRows = await db.all<{ estado: string; total: number }>(sql`
+    SELECT estado, COUNT(*) AS total FROM reservas GROUP BY estado
+  `);
+  const reservasPorEstado: AdminEstadoConteo[] = estadoRows.map(e => ({
+    label: etiquetaEstadoReserva(e.estado), valor: e.total,
+  }));
+
   const payload: AdminPanelResponse = {
     stats: {
       eventosActivos: r.eventos_activos,
@@ -112,6 +165,7 @@ adminRoutes.get('/admin/panel', async c => {
     proximosEventos,
     inscripcionesRecientes,
     inscripcionesPorSemana,
+    reservasPorEstado,
   };
   return c.json(payload);
 });

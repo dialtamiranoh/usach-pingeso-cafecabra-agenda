@@ -4,7 +4,9 @@ import { createDb } from "../db";
 import { user, session, account, verification, rateLimit } from "../db/schema";
 import type { AppBindings } from "../config/bindings";
 
-export function createAuth(env: AppBindings) {
+// allowSignUp solo se activa para el alta controlada de administradores (endpoint bootstrap).
+// El registro público queda deshabilitado: nadie puede auto-crearse una cuenta.
+export function createAuth(env: AppBindings, opts: { allowSignUp?: boolean } = {}) {
   if (!env.BETTER_AUTH_SECRET) throw new Error("Falta configurar BETTER_AUTH_SECRET");
   return betterAuth({
     baseURL: env.BETTER_AUTH_URL,
@@ -16,7 +18,7 @@ export function createAuth(env: AppBindings) {
     }),
     emailAndPassword: {
       enabled: true,
-      disableSignUp: false,
+      disableSignUp: !opts.allowSignUp,
       minPasswordLength: 8,
     },
     session: { expiresIn: 60 * 60 * 24 * 7, updateAge: 60 * 60 * 24 },

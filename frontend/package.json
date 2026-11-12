@@ -10,10 +10,11 @@
   },
   "dependencies": {
     "@cafecabra/shared": "0.1.0",
+    "better-auth": "^1.7.10",
+    "chart.js": "^4.6.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-router-dom": "^7.18.4",
-    "better-auth": "^1.7.10"
+    "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.3",
