@@ -10,11 +10,17 @@ try {
     await db.batch(sql.split('--> statement-breakpoint').filter(part => part.trim()).map(part => db.prepare(part)));
   }
   const sql = await readFile('backend/seeds/catalogo-dev.sql', 'utf8');
-  const seed = () => db.batch(sql.split('--> statement-breakpoint').filter(part => part.trim()).map(part => db.prepare(part)));
+  const editionSql = await readFile('backend/seeds/ediciones.sql', 'utf8');
+  const seed = async () => {
+    await db.batch(sql.split('--> statement-breakpoint').filter(part => part.trim()).map(part => db.prepare(part)));
+    await db.batch(editionSql.split('--> statement-breakpoint').filter(part => part.trim()).map(part => db.prepare(part)));
+  };
   await seed();
   await seed();
   assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM eventos').first()).n, 4);
   assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM fechas').first()).n, 6);
+  assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM ediciones').first()).n, 5);
+  assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM fechas WHERE edicion_id IS NULL').first()).n, 0);
   assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM reservas').first()).n, 0);
   assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM user').first()).n, 0);
   assert.equal((await db.prepare("SELECT COUNT(*) AS n FROM configuracion WHERE valor='CONJUNTAS'").first()).n, 1);

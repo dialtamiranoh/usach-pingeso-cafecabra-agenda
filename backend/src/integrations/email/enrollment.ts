@@ -9,6 +9,7 @@ export interface EnrollmentEmailInput {
   clientEmail: string;
   clientName: string;
   courseTitle: string;
+  dates?: { date: string; schedule: string }[];
   code: string;
   phone: string;
   instagram: string;
@@ -69,6 +70,13 @@ function callout(text: string): string {
   </table>`;
 }
 
+function datesCard(input: EnrollmentEmailInput): string {
+  if (!input.dates?.length) return '';
+  return dataCard('Fechas de tu inscripción', input.dates.map(day => [
+    new Intl.DateTimeFormat('es-CL', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${day.date}T12:00:00Z`)), day.schedule,
+  ]));
+}
+
 const signoffClient = `<p style="font-size:14px;color:#666666;line-height:1.7;margin:0;">¡Nos vemos pronto! ☕<br><strong style="color:#111111;">Café Cabra Escuela</strong></p>`;
 const signoffAdmin = `<p style="font-size:14px;color:#666666;line-height:1.7;margin:0;"><strong style="color:#111111;">Café Cabra Escuela</strong></p>`;
 
@@ -80,6 +88,7 @@ function clientHtml(input: EnrollmentEmailInput): string {
         Tu inscripción en <strong style="color:#111111;">${esc(input.courseTitle)}</strong> quedó <strong style="color:#111111;">confirmada</strong>.<br><br>
         Tu código de reserva es <strong style="color:#111111;">${esc(input.code)}</strong>.
       </p>
+      ${datesCard(input)}
       ${callout('Guarda tu código de reserva por si necesitas contactarnos.')}
       ${signoffClient}`;
     return layout(body);
@@ -96,6 +105,7 @@ function clientHtml(input: EnrollmentEmailInput): string {
       ['Tipo de cuenta', t.tipoCuenta], ['N° de cuenta', t.numeroCuenta], ['Correo', t.correo],
     ])}
     ${dataCard('Tu reserva', [['Código', input.code], ['Monto', clp(t.monto)]])}
+    ${datesCard(input)}
     ${callout(`Al transferir, agrega <strong style="color:#111111;">${esc(t.correo)}</strong> en el campo de email o notificación del destinatario, o envíanos el comprobante a ese correo.${plazo ? ` Tienes plazo para pagar hasta el <strong style="color:#111111;">${esc(plazo)}</strong>.` : ''}`)}
     ${signoffClient}`;
   return layout(body);
@@ -125,6 +135,7 @@ function adminHtml(input: EnrollmentEmailInput): string {
     </p>
     ${alumno}
     ${inscripcion}
+    ${datesCard(input)}
     ${bancarios}
     ${aviso}
     ${signoffAdmin}`;

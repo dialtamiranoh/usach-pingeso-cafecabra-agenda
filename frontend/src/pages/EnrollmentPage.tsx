@@ -42,7 +42,7 @@ export function EnrollmentPage({ course, session, draft, onChange, step }: {
     setSaveError('');
     try {
       const base: FreeEnrollmentRequest = {
-        eventId: course.id, requestId: requestId.current, name: draft.name, email: draft.email, phone: draft.phone,
+        eventId: course.id, editionId: session.id, requestId: requestId.current, name: draft.name, email: draft.email, phone: draft.phone,
         instagram: draft.instagram, dietaryPreference: enrollmentData.dietaryPreference, dietaryOther: enrollmentData.dietaryOther,
         allergyStatus: enrollmentData.allergyStatus, allergyDetails: enrollmentData.allergyDetails, notes: draft.notes, confirmed: draft.confirmed,
       };
@@ -143,7 +143,8 @@ export function EnrollmentPage({ course, session, draft, onChange, step }: {
         <div className="dialog-content">
           <button type="button" className="dialog-close" aria-label="Cerrar revisión" disabled={pending} onClick={() => review.current?.close()}>×</button>
           <p className="eyebrow">REVISIÓN DE INSCRIPCIÓN</p><h2 id="review-title">Revisa tus datos</h2>
-          <p>{course.title} · {formatSessionDate(session.date)} · {session.startTime} – {session.endTime}</p>
+          <p>{course.title}</p>
+          {session.days.map(day => <p key={`${day.date}-${day.startTime}`}>{formatSessionDate(day.date)} · {day.startTime} – {day.endTime}</p>)}
           <dl className="review-data">
             <div><dt>Nombre</dt><dd>{draft.name}</dd></div><div><dt>Correo</dt><dd>{draft.email}</dd></div><div><dt>Teléfono</dt><dd>{draft.phone}</dd></div>
             {draft.instagram.trim() && <div><dt>Instagram</dt><dd>@{draft.instagram.trim().replace(/^@/, '')}</dd></div>}

@@ -2,6 +2,12 @@
 export * from './instituciones-financieras';
 export * from './tipos-cuenta';
 
+export interface CatalogEdition {
+  id: string; capacity: number | null; remainingSeats: number | null;
+  status: 'ABIERTO' | 'CERRADO' | 'CANCELADO';
+  dates: { id: string; date: string; schedule: string | null }[];
+}
+
 export interface CatalogEvent {
   id: string; title: string; description: string; type: string;
   status: 'BORRADOR' | 'ABIERTO' | 'CERRADO' | 'CANCELADO';
@@ -9,10 +15,31 @@ export interface CatalogEvent {
   requiresPayment: boolean; location: string; instructors: string[];
   includes: string; certificate: boolean; image: string | null;
   images: string[];
+  editions: CatalogEdition[];
   dateMode: 'INDEPENDIENTES' | 'CONJUNTAS';
   dates: { id: string; date: string; schedule: string | null }[];
 }
 export interface CatalogResponse { events: CatalogEvent[] }
+
+export type ReservationStatus = 'RESERVADO' | 'EN_ESPERA' | 'CONFIRMADO' | 'CANCELADO' | 'EXPIRADO';
+export interface AdminEnrollment {
+  id: number; code: string; attendee: string; contact: string; email: string; event: string;
+  status: ReservationStatus; createdAt: number; expiresAt: number | null;
+  amount: number; amountRecorded: boolean; paid: boolean;
+  editionId: string | null;
+  dates: { date: string; schedule: string | null }[];
+}
+export interface AdminEnrollmentDetail extends AdminEnrollment {
+  phone: string | null; payerRut: string | null; bank: string | null; accountSuffix: string | null;
+  notes: string; accountType: string; canConfirm: boolean; canCancel: boolean;
+  dates: { date: string; schedule: string | null }[];
+  dateMode: 'CONJUNTAS' | 'INDEPENDIENTES';
+  editionOptions: CatalogEdition[];
+  needsEdition: boolean;
+  decision: { action: 'CONFIRMAR' | 'CANCELAR'; reason: string; date: number } | null;
+  notification: { id: string; status: 'PENDIENTE' | 'ENVIANDO' | 'ENVIADO' | 'ERROR'; attempts: number; subject: string; message: string; sentAt: number | null } | null;
+}
+export interface AdminEnrollmentList { items: AdminEnrollment[]; total: number; page: number; pageSize: number }
 
 
 
@@ -97,6 +124,7 @@ export interface AdminPanelResponse {
 
 export interface FreeEnrollmentRequest {
   eventId: string;
+  editionId: string;
   requestId: string;
   name: string;
   email: string;
@@ -132,6 +160,7 @@ export interface EnrollmentReceipt {
   code: string;
   status: 'CONFIRMADO' | 'RESERVADO';
   eventId: string;
+  editionId: string;
   transfer?: TransferDetails;
 }
 

@@ -263,12 +263,20 @@ export const eventoMedia = sqliteTable("evento_media", {
 });
 
 // Fechas del evento (RN-08, RN-09). fecha/horario como texto (día y rango).
+export const ediciones = sqliteTable("ediciones", {
+  id: text("id").primaryKey(),
+  eventoId: integer("evento_id").notNull().references(() => eventos.id),
+  cupoMaximo: integer("cupo_maximo"),
+  estado: text("estado", { enum: ["ABIERTO", "CERRADO", "CANCELADO"] }).notNull().default("ABIERTO"),
+});
+
 export const fechas = sqliteTable("fechas", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   eventoId: integer("evento_id")
     .notNull()
     .references(() => eventos.id, { onDelete: "cascade" }),
   fecha: text("fecha").notNull(), // ISO 'YYYY-MM-DD'
+  edicionId: text("edicion_id").references(() => ediciones.id),
   horario: text("horario"), // ej. '09:00-15:30'
   actualizadoPor: text("actualizado_por").references(() => user.id),
   actualizadoEn: integer("actualizado_en", { mode: "timestamp" }),
@@ -292,6 +300,8 @@ export const reservas = sqliteTable(
       () => opcionesAlimentarias.id,
     ), // nullable (RN-34)
     codigo: text("codigo").notNull().unique(),
+    montoEsperado: integer("monto_esperado"), // Precio acordado al crear la inscripción; NULL en reservas anteriores.
+    edicionId: text("edicion_id").references(() => ediciones.id),
 
     // Reservado POR: quien inscribe / paga. Recibe las comunicaciones.
     reservadoPorNombre: text("reservado_por_nombre").notNull(),
@@ -333,7 +343,7 @@ export const reservas = sqliteTable(
     // Índice parcial: la dupla es única solo entre reservas ACTIVAS. Una reserva
     // EXPIRADO o CANCELADO no bloquea volver a inscribirse (RN-11, RN-12).
     uniqueIndex("uq_reserva_evento_por_para")
-      .on(t.eventoId, t.reservadoPorCorreo, t.reservadoParaRut)
+        .on(t.eventoId, t.edicionId, t.reservadoPorCorreo, t.reservadoParaRut)
       .where(sql`estado IN ('RESERVADO', 'EN_ESPERA', 'CONFIRMADO')`),
   ],
 );
@@ -361,6 +371,31 @@ export const notificacionesPago = sqliteTable("notificaciones_pago", {
   recibidoEn: integer("recibido_en", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),
+});
+
+// Una decisión manual terminal por reserva. La sesión del dueño aporta el actor.
+export const reservaDecisiones = sqliteTable("reserva_decisiones", {
+  id: text("id").primaryKey(),
+  reservaId: integer("reserva_id").notNull().unique().references(() => reservas.id),
+  accion: text("accion", { enum: ["CONFIRMAR", "CANCELAR"] }).notNull(),
+  motivo: text("motivo").notNull().default(""),
+  montoEsperado: integer("monto_esperado"),
+  administradorId: text("administrador_id").notNull().references(() => user.id),
+  creadoEn: integer("creado_en").notNull().default(sql`(unixepoch())`),
+});
+
+// Correo durable: se crea en la misma transacción que la decisión.
+export const notificacionesReserva = sqliteTable("notificaciones_reserva", {
+  id: text("id").primaryKey(),
+  decisionId: text("decision_id").notNull().unique().references(() => reservaDecisiones.id),
+  destinatario: text("destinatario").notNull(),
+  asunto: text("asunto").notNull(),
+  mensaje: text("mensaje").notNull(),
+  estado: text("estado", { enum: ["PENDIENTE", "ENVIANDO", "ENVIADO", "ERROR"] }).notNull().default("PENDIENTE"),
+  intentos: integer("intentos").notNull().default(0),
+  bloqueadoEn: integer("bloqueado_en"),
+  enviadoEn: integer("enviado_en"),
+  proveedorId: text("proveedor_id"),
 });
 
 /* ────────────────────────────────────────────────────────────────────────

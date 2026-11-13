@@ -15,8 +15,8 @@ export function AvailabilityPage({ course }: { course: CatalogItem }) {
   const activeDate = date || selected?.date || '';
   const calendarSessions = sessions.flatMap(session => session.days.map(day => ({ ...session, ...day })));
   const dailySessions = sessions.filter(session => session.days.some(day => day.date === activeDate));
-  const selectedDates = [...new Set(dailySessions.flatMap(session => session.days.map(day => day.date)))];
-  const multiDay = course.dateMode === 'CONJUNTAS' && course.dates.length > 1;
+  const selectedDates = selected ? selected.days.map(day => day.date) : dailySessions.length === 1 ? dailySessions[0].days.map(day => day.date) : activeDate ? [activeDate] : [];
+  const multiDay = selected ? selected.days.length > 1 : dailySessions.length === 1 ? dailySessions[0].days.length > 1 : sessions.length === 1 && sessions[0].days.length > 1;
 
   function selectDate(value: string) {
     setDate(value);

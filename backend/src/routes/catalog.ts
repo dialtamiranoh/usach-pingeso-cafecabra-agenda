@@ -1,11 +1,12 @@
 import { Hono } from 'hono';
 import type { CatalogEvent } from '@cafecabra/shared';
 import type { AppBindings } from '../config/bindings';
+import { loadEditions } from '../services/editions';
 
 export const catalogRoutes = new Hono<{ Bindings: AppBindings }>();
 
 export async function listEvents(database: D1Database, localPreview: boolean): Promise<CatalogEvent[]> {
-  // Los cupos corresponden al evento completo, no a cada jornada.
+  // Los cupos se calculan por edición; una edición puede incluir varias jornadas.
   const { results: events } = await database.prepare(`
     SELECT e.id, e.nombre, e.descripcion, e.estado, e.precio, e.cupo_maximo,
       e.controla_cupo, e.incluye, e.incluye_certificado, t.nombre AS tipo,
@@ -32,25 +33,31 @@ export async function listEvents(database: D1Database, localPreview: boolean): P
   if (!events.length) return [];
   const ids = events.map(event => event.id);
   const placeholders = ids.map(() => '?').join(',');
-  const [dates, teachers, media] = await Promise.all([
+  const [dates, teachers, media, editionGroups] = await Promise.all([
     database.prepare(`SELECT id, evento_id, fecha, horario FROM fechas WHERE evento_id IN (${placeholders}) ORDER BY fecha, id`).bind(...ids)
       .all<{ id: number; evento_id: number; fecha: string; horario: string | null }>(),
     database.prepare(`SELECT ei.evento_id, i.nombre FROM evento_instructores ei JOIN instructores i ON i.id=ei.instructor_id WHERE ei.evento_id IN (${placeholders}) ORDER BY i.nombre`).bind(...ids)
       .all<{ evento_id: number; nombre: string }>(),
     database.prepare(`SELECT evento_id, url FROM evento_media WHERE evento_id IN (${placeholders}) AND tipo='IMAGEN' ORDER BY es_principal DESC, orden, id`).bind(...ids)
       .all<{ evento_id: number; url: string }>(),
+    loadEditions(database, ids),
   ]);
-  return events.map(event => ({
+  return events.map(event => {
+    const editions = editionGroups.get(event.id) ?? [];
+    const available = editions.filter(edition => edition.status === 'ABIERTO');
+    return ({
     id: String(event.id), title: event.nombre, description: event.descripcion ?? '',
     type: event.tipo, status: event.estado, price: event.precio, capacity: event.cupo_maximo,
-    remainingSeats: !event.controla_cupo || event.cupo_maximo === null ? null : Math.max(0, event.cupo_maximo - event.ocupados),
+    remainingSeats: available.some(edition => edition.remainingSeats === null) ? null : available.reduce((total, edition) => total + (edition.remainingSeats ?? 0), 0),
+    editions,
     requiresPayment: Boolean(event.requiere_pago), location: [event.lugar, event.direccion].filter(Boolean).join(' · '),
     instructors: teachers.results.filter(row => row.evento_id === event.id).map(row => row.nombre),
     includes: event.incluye ?? '', certificate: Boolean(event.incluye_certificado), image: event.imagen,
     images: [...new Set(media.results.filter(row => row.evento_id === event.id).map(row => row.url))],
-    dateMode: event.modalidad_fechas === 'CONJUNTAS' ? 'CONJUNTAS' : 'INDEPENDIENTES',
+    dateMode: editions.length === 1 && editions[0].dates.length > 1 ? 'CONJUNTAS' as const : 'INDEPENDIENTES' as const,
     dates: dates.results.filter(row => row.evento_id === event.id).map(row => ({ id: String(row.id), date: row.fecha, schedule: row.horario })),
-  }));
+  });
+  });
 }
 
 // Local y desarrollo permiten previsualizar cursos con información pendiente.

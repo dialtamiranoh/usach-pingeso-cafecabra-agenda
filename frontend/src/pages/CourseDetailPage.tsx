@@ -16,7 +16,7 @@ export function CourseDetailPage({ course }: { course: CatalogItem }) {
           <p>{course.type === 'Curso' ? 'Profesor' : 'Anfitrión'}: {course.instructors.join(', ') || 'Por confirmar'}</p>
           <p><strong>Valor: {course.requiresPayment ? formatPrice(course.price) : 'Entrada liberada'}</strong></p>
           <p className="location-line"><span aria-hidden="true">⌖</span>{course.location}</p>
-          <span className="availability-badge">{course.status !== 'ABIERTO' ? 'Próximamente · Horario por confirmar' : course.remainingSeats === null ? 'Inscripciones abiertas' : `${course.remainingSeats} cupos disponibles`}</span>
+          <span className="availability-badge">{course.status !== 'ABIERTO' ? 'Próximamente · Horario por confirmar' : course.editions.length > 1 ? 'Cupos disponibles por fecha' : course.remainingSeats === null ? 'Inscripciones abiertas' : `${course.remainingSeats} cupos disponibles`}</span>
         </div>
       </section>
       <section className="panel reserve-callout" aria-labelledby="reserve-title">

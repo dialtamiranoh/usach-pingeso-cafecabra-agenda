@@ -1,6 +1,6 @@
 import { isValidRut } from './enrollment-options';
 
-// Selección de inscripción para un evento; todas sus jornadas están incluidas.
+// Selección de una edición; incluye únicamente las jornadas de esa edición.
 export interface BookingSession {
   id: string;
   courseId: string;

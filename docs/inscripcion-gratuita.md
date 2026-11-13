@@ -13,7 +13,7 @@ La pantalla de éxito muestra la confirmación y el resumen. El código se conse
 
 ## Datos guardados
 
-`POST /api/inscripciones` guarda una fila en `reservas`: evento, código, nombre, correo, teléfono, nombre del asistente, estado `CONFIRMADO`, origen `SISTEMA` y fecha de confirmación. La inscripción abarca todas las jornadas del evento.
+`POST /api/inscripciones` guarda una fila en `reservas`: evento, edición elegida, código, nombre, correo, teléfono, nombre del asistente, estado `CONFIRMADO`, origen `SISTEMA` y fecha de confirmación. La inscripción abarca únicamente las jornadas de esa edición.
 
 Sin cambiar el esquema del equipo, Instagram y comentarios se guardan provisionalmente como JSON versionado en `observaciones`. Los eventos no guardan preferencias ni alergias; si se trata de un curso, esos campos adicionales sí se conservan. No se asocian automáticamente a las opciones alimentarias ofrecidas por un evento: una preferencia declarada no confirma que se pueda atender. La estructura definitiva de estos campos queda para el acuerdo de modelo de datos.
 

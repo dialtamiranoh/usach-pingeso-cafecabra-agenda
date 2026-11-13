@@ -4,7 +4,7 @@ import { and, eq, like, sql } from 'drizzle-orm';
 import type { AppBindings } from '../config/bindings';
 import type { TransferDetails } from '@cafecabra/shared';
 import { createDb } from '../db';
-import { configuracion, eventos, reservas, tipoEvento } from '../db/schema';
+import { configuracion, eventos, reservas, tipoEvento, ediciones } from '../db/schema';
 import { sendEnrollmentEmails } from '../integrations/email/enrollment';
 import { normalizarInstitucionFinanciera, normalizarTipoCuenta } from '@cafecabra/shared';
 import { publicarEvento } from '../realtime/publish';
@@ -73,16 +73,16 @@ enrollmentRoutes.post('/inscripciones', async c => {
   } catch { return c.json({ error: 'El formulario no es válido.' }, 400); }
 
   // --- Campos comunes (gratis y pagado) ---
-  const limits: Record<string, number> = { eventId: 15, requestId: 36, name: 120, email: 254, phone: 25, instagram: 31, dietaryPreference: 20, dietaryOther: 300, allergyStatus: 20, allergyDetails: 500, notes: 1000 };
+  const limits: Record<string, number> = { eventId: 15, editionId: 80, requestId: 36, name: 120, email: 254, phone: 25, instagram: 31, dietaryPreference: 20, dietaryOther: 300, allergyStatus: 20, allergyDetails: 500, notes: 1000 };
   const data: Record<string, string> = {};
   for (const [field, max] of Object.entries(limits)) {
     if (typeof input[field] !== 'string' || input[field].length > max) return c.json({ error: 'Revisa los campos del formulario.' }, 400);
     data[field] = input[field].trim();
   }
-  const { eventId, requestId, name, phone, instagram, dietaryPreference, dietaryOther, allergyStatus, allergyDetails, notes } = data;
+  const { eventId, editionId, requestId, name, phone, instagram, dietaryPreference, dietaryOther, allergyStatus, allergyDetails, notes } = data;
   const email = data.email.toLowerCase();
   const igHandle = instagram.replace(/^@/, '');
-  if (!/^[1-9]\d*$/.test(eventId) || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId) ||
+  if (!/^[1-9]\d*$/.test(eventId) || !/^[a-zA-Z0-9_-]{1,80}$/.test(editionId) || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId) ||
       name.length < 3 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^[+\d\s().-]+$/.test(phone) || phone.replace(/\D/g, '').length < 9 || phone.replace(/\D/g, '').length > 15 ||
       (instagram && !/^@?[a-zA-Z0-9._]{1,30}$/.test(instagram)) || !['', 'none', 'vegan', 'vegetarian', 'other'].includes(dietaryPreference) ||
       (dietaryPreference === 'other' && !dietaryOther) || !['', 'no', 'yes', 'undisclosed'].includes(allergyStatus) || (allergyStatus === 'yes' && !allergyDetails) || input.confirmed !== true) {
@@ -102,21 +102,28 @@ enrollmentRoutes.post('/inscripciones', async c => {
   const { titulo, precio } = evento;
   const esPagado = evento.requierePago || precio > 0;
 
+  const edition = await db.select().from(ediciones).where(and(eq(ediciones.id, editionId), eq(ediciones.eventoId, eventIdNum))).get();
+  if (!edition) return c.json({ error: 'La fecha seleccionada no pertenece a esta actividad.' }, 400);
+  const selectedDates = await c.env.cafe_cabra_agenda_db.prepare('SELECT fecha,horario FROM fechas WHERE edicion_id=? AND evento_id=? ORDER BY fecha,id').bind(editionId, eventIdNum).all<{ fecha: string; horario: string | null }>();
   const code = `CC-${requestId.toUpperCase()}`;
 
   // Reintento idempotente: si el código ya existe y coincide, devolvemos su estado actual (sin reenviar correos).
   const existing = await db.select({
-    eventoId: reservas.eventoId, correo: reservas.reservadoPorCorreo,
-    estado: reservas.estado, expiraEn: reservas.expiraEn,
+    eventoId: reservas.eventoId, edicionId: reservas.edicionId, correo: reservas.reservadoPorCorreo,
+    estado: reservas.estado, expiraEn: reservas.expiraEn, montoEsperado: reservas.montoEsperado,
   }).from(reservas).where(eq(reservas.codigo, code)).get();
   if (existing) {
-    if (String(existing.eventoId) !== eventId || existing.correo !== email || !['CONFIRMADO', 'RESERVADO'].includes(existing.estado)) {
+    if (existing.edicionId !== editionId || String(existing.eventoId) !== eventId || existing.correo !== email || !['CONFIRMADO', 'RESERVADO'].includes(existing.estado)) {
       return c.json({ error: 'La solicitud ya fue utilizada.' }, 409);
     }
     if (existing.estado === 'RESERVADO') {
-      return c.json({ code, status: 'RESERVADO', eventId, transfer: await readTransfer(db, precio, toEpoch(existing.expiraEn)) });
+      return c.json({ code, status: 'RESERVADO', eventId, editionId, transfer: await readTransfer(db, existing.montoEsperado ?? precio, toEpoch(existing.expiraEn)) });
     }
-    return c.json({ code, status: 'CONFIRMADO', eventId });
+    return c.json({ code, status: 'CONFIRMADO', eventId, editionId });
+  }
+
+  if (edition.estado !== 'ABIERTO' || !selectedDates.results.length || selectedDates.results.some(day => !day.horario || !/^([01]\d|2[0-3]):[0-5]\d\s*[-–]\s*([01]\d|2[0-3]):[0-5]\d$/.test(day.horario) || day.horario.split(/\s*[-–]\s*/)[0] >= day.horario.split(/\s*[-–]\s*/)[1])) {
+    return c.json({ error: 'La edición no está abierta o sus horarios están pendientes.' }, 409);
   }
 
   // Las columnas no modeladas se conservan en observaciones como JSON versionado.
@@ -131,7 +138,7 @@ enrollmentRoutes.post('/inscripciones', async c => {
       const adminEmail = await readAdminEmail(db, c.env.ADMIN_EMAIL);
       await sendEnrollmentEmails({
         apiKey: c.env.RESEND_API_KEY, adminEmail, clientEmail: email, clientName: name,
-        courseTitle: titulo, code, phone, instagram: igHandle, paid: opts.paid, transfer: opts.transfer, payer: opts.payer,
+        courseTitle: titulo, dates: selectedDates.results.map(day => ({ date: day.fecha, schedule: day.horario! })), code, phone, instagram: igHandle, paid: opts.paid, transfer: opts.transfer, payer: opts.payer,
       });
     } catch (error) {
       console.error('Error enviando correos de inscripción', error instanceof Error ? error.message : String(error));
@@ -142,29 +149,29 @@ enrollmentRoutes.post('/inscripciones', async c => {
     // ---- Flujo GRATIS: nace CONFIRMADO (INSERT atómico, sin sobreventa) ----
     const inserted = await db.all<{ id: number }>(sql`
       INSERT OR IGNORE INTO reservas (evento_id, codigo, reservado_por_nombre, reservado_por_correo,
-        reservado_por_telefono, reservado_para_nombre, observaciones, estado, origen_confirmacion, confirmado_en)
-      SELECT e.id, ${code}, ${name}, ${email}, ${phone}, ${name}, ${details}, 'CONFIRMADO', 'SISTEMA', unixepoch()
-      FROM eventos e JOIN tipo_evento t ON t.id=e.tipo_evento_id JOIN ubicaciones u ON u.id=e.ubicacion_id
-      WHERE e.id=${eventIdNum} AND e.estado='ABIERTO' AND t.requiere_pago=0 AND e.precio=0 AND t.activo=1 AND u.activo=1
+        reservado_por_telefono, reservado_para_nombre, observaciones, estado, origen_confirmacion, confirmado_en, monto_esperado, edicion_id)
+      SELECT e.id, ${code}, ${name}, ${email}, ${phone}, ${name}, ${details}, 'CONFIRMADO', 'SISTEMA', unixepoch(), 0, ${editionId}
+      FROM eventos e JOIN tipo_evento t ON t.id=e.tipo_evento_id JOIN ubicaciones u ON u.id=e.ubicacion_id JOIN ediciones d ON d.evento_id=e.id
+      WHERE e.id=${eventIdNum} AND d.id=${editionId} AND d.estado='ABIERTO' AND e.estado='ABIERTO' AND t.requiere_pago=0 AND e.precio=0 AND t.activo=1 AND u.activo=1
         AND (e.cierre_inscripcion_en IS NULL OR e.cierre_inscripcion_en>unixepoch())
-        AND EXISTS (SELECT 1 FROM fechas f WHERE f.evento_id=e.id)
-        AND NOT EXISTS (SELECT 1 FROM reservas r WHERE r.evento_id=e.id
+        AND EXISTS (SELECT 1 FROM fechas f WHERE f.evento_id=e.id AND f.edicion_id=d.id)
+        AND NOT EXISTS (SELECT 1 FROM reservas r WHERE r.evento_id=e.id AND (r.edicion_id=d.id OR r.edicion_id IS NULL)
           AND LOWER(TRIM(r.reservado_por_correo))=${email} AND LOWER(TRIM(r.reservado_para_nombre))=LOWER(${name})
           AND (r.estado='CONFIRMADO' OR (r.estado='RESERVADO' AND (r.expira_en IS NULL OR r.expira_en>unixepoch()))))
-        AND (e.controla_cupo=0 OR e.cupo_maximo IS NULL OR e.cupo_maximo >
-          (SELECT COUNT(*) FROM reservas r WHERE r.evento_id=e.id AND
+        AND (e.controla_cupo=0 OR d.cupo_maximo IS NULL OR d.cupo_maximo >
+          (SELECT COUNT(*) FROM reservas r WHERE r.evento_id=e.id AND (r.edicion_id=d.id OR r.edicion_id IS NULL) AND
           (r.estado='CONFIRMADO' OR (r.estado='RESERVADO' AND (r.expira_en IS NULL OR r.expira_en>unixepoch())))))
       RETURNING id
     `);
     if (inserted.length === 0) {
       const replay = await db.select({ id: reservas.id }).from(reservas)
-        .where(and(eq(reservas.codigo, code), eq(reservas.eventoId, eventIdNum), eq(reservas.reservadoPorCorreo, email))).get();
-      if (replay) return c.json({ code, status: 'CONFIRMADO', eventId });
+        .where(and(eq(reservas.codigo, code), eq(reservas.eventoId, eventIdNum), eq(reservas.edicionId, editionId), eq(reservas.reservadoPorCorreo, email))).get();
+      if (replay) return c.json({ code, status: 'CONFIRMADO', eventId, editionId });
       return c.json({ error: 'No pudimos inscribirte: el evento no está disponible, no quedan cupos o ya existe una inscripción con tus datos.' }, 409);
     }
     await notify({ paid: false });
     await publicarEvento(c.env, { tipo: 'RESERVA_NUEVA', eventId, titulo, detalle: name, ts: Date.now() });
-    return c.json({ code, status: 'CONFIRMADO', eventId }, 201);
+    return c.json({ code, status: 'CONFIRMADO', eventId, editionId }, 201);
   }
 
   // ---- Flujo PAGADO: nace RESERVADO con plazo de pago (12 h) ----
@@ -190,31 +197,31 @@ enrollmentRoutes.post('/inscripciones', async c => {
   const inserted = await db.all<{ id: number; expira_en: number }>(sql`
     INSERT OR IGNORE INTO reservas (evento_id, codigo, reservado_por_nombre, reservado_por_correo,
       reservado_por_telefono, reservado_por_rut, reservado_para_nombre, reservado_para_rut,
-      banco_origen, cuenta_origen, observaciones, estado, expira_en)
+      banco_origen, cuenta_origen, observaciones, estado, expira_en, monto_esperado, edicion_id)
         SELECT e.id, ${code}, ${titular}, ${email}, ${phone}, ${payerRut}, ${name}, ${payerRut}, ${originBank}, ${accountLastFour}, ${detailsPagado}, 'RESERVADO',
-      unixepoch() + COALESCE((SELECT CAST(valor AS INTEGER) FROM configuracion WHERE clave='pago:plazo_horas'), 12) * 3600
-    FROM eventos e JOIN tipo_evento t ON t.id=e.tipo_evento_id JOIN ubicaciones u ON u.id=e.ubicacion_id
-    WHERE e.id=${eventIdNum} AND e.estado='ABIERTO' AND t.requiere_pago=1 AND e.precio>0 AND t.activo=1 AND u.activo=1
+      unixepoch() + COALESCE((SELECT CAST(valor AS INTEGER) FROM configuracion WHERE clave='pago:plazo_horas'), 12) * 3600, ${precio}, ${editionId}
+    FROM eventos e JOIN tipo_evento t ON t.id=e.tipo_evento_id JOIN ubicaciones u ON u.id=e.ubicacion_id JOIN ediciones d ON d.evento_id=e.id
+    WHERE e.id=${eventIdNum} AND d.id=${editionId} AND d.estado='ABIERTO' AND e.estado='ABIERTO' AND t.requiere_pago=1 AND e.precio>0 AND t.activo=1 AND u.activo=1
       AND (e.cierre_inscripcion_en IS NULL OR e.cierre_inscripcion_en>unixepoch())
-      AND EXISTS (SELECT 1 FROM fechas f WHERE f.evento_id=e.id)
-      AND NOT EXISTS (SELECT 1 FROM reservas r WHERE r.evento_id=e.id
+      AND EXISTS (SELECT 1 FROM fechas f WHERE f.evento_id=e.id AND f.edicion_id=d.id)
+      AND NOT EXISTS (SELECT 1 FROM reservas r WHERE r.evento_id=e.id AND (r.edicion_id=d.id OR r.edicion_id IS NULL)
                 AND LOWER(TRIM(r.reservado_por_correo))=${email} AND r.reservado_para_rut=${payerRut}
         AND (r.estado='CONFIRMADO' OR (r.estado='RESERVADO' AND (r.expira_en IS NULL OR r.expira_en>unixepoch()))))
-      AND (e.controla_cupo=0 OR e.cupo_maximo IS NULL OR e.cupo_maximo >
-        (SELECT COUNT(*) FROM reservas r WHERE r.evento_id=e.id AND
+      AND (e.controla_cupo=0 OR d.cupo_maximo IS NULL OR d.cupo_maximo >
+        (SELECT COUNT(*) FROM reservas r WHERE r.evento_id=e.id AND (r.edicion_id=d.id OR r.edicion_id IS NULL) AND
         (r.estado='CONFIRMADO' OR (r.estado='RESERVADO' AND (r.expira_en IS NULL OR r.expira_en>unixepoch())))))
     RETURNING id, expira_en
   `);
 
   if (inserted.length === 0) {
-    const replay = await db.select({ expiraEn: reservas.expiraEn }).from(reservas)
-      .where(and(eq(reservas.codigo, code), eq(reservas.eventoId, eventIdNum), eq(reservas.reservadoPorCorreo, email), eq(reservas.estado, 'RESERVADO'))).get();
-    if (replay) return c.json({ code, status: 'RESERVADO', eventId, transfer: await readTransfer(db, precio, toEpoch(replay.expiraEn)) });
+    const replay = await db.select({ expiraEn: reservas.expiraEn, montoEsperado: reservas.montoEsperado }).from(reservas)
+      .where(and(eq(reservas.codigo, code), eq(reservas.eventoId, eventIdNum), eq(reservas.edicionId, editionId), eq(reservas.reservadoPorCorreo, email), eq(reservas.estado, 'RESERVADO'))).get();
+    if (replay) return c.json({ code, status: 'RESERVADO', eventId, editionId, transfer: await readTransfer(db, replay.montoEsperado ?? precio, toEpoch(replay.expiraEn)) });
     return c.json({ error: 'No pudimos crear tu reserva: el evento no está disponible, no quedan cupos o ya existe una inscripción con tus datos.' }, 409);
   }
 
   const transfer = await readTransfer(db, precio, inserted[0].expira_en);
     await notify({ paid: true, transfer, payer: { rut: payerRut, bank: originBank, accountType, account: accountLastFour } });
   await publicarEvento(c.env, { tipo: 'RESERVA_NUEVA', eventId, titulo, detalle: name, ts: Date.now() });
-  return c.json({ code, status: 'RESERVADO', eventId, transfer }, 201);
+  return c.json({ code, status: 'RESERVADO', eventId, editionId, transfer }, 201);
 });

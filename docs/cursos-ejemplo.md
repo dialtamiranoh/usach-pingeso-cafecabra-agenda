@@ -24,7 +24,7 @@ La carga puede repetirse: comprueba los nombres y relaciones existentes antes de
 
 El listado devuelve cuatro filas porque el intensivo tiene dos fechas. Incluye una comprobación de claves foráneas: un resultado vacío de `foreign_key_check` significa que no detectó referencias inválidas.
 
-El catálogo de React consulta `GET /api/catalogo`. En local muestra los tres cursos en el inicio, con los borradores señalados como próximos y sin permitir su inscripción. En remoto mantiene el filtro de eventos abiertos. Se retiraron la vista de gestión y su API; la gestión del administrador se desarrollará más adelante. Una inscripción al intensivo incluye ambas jornadas; su formulario todavía no guarda reservas.
+El catálogo de React consulta `GET /api/catalogo`. En local muestra los tres cursos en el inicio, con los borradores señalados como próximos y sin permitir su inscripción. En remoto mantiene el filtro de eventos abiertos. Las inscripciones se guardan por edición; la sección Inscritos permite revisar pagos y decidir confirmación o cancelación. Una inscripción al intensivo incluye ambas jornadas.
 
 ## Evento ficticio adicional
 
@@ -36,11 +36,11 @@ Los cursos pueden haberse editado manualmente en SQLite; no repetir su carga par
 
 Por defecto cada registro de fechas es una alternativa independiente. La Master Class permite elegir el 14 o el 21 por separado; el resumen y el formulario conservan únicamente la fecha seleccionada.
 
-Para el intensivo de Barista se configura explícitamente `CONJUNTAS` en la tabla existente `configuracion`, clave `evento:<id>:modalidad_fechas`. Ejecutar `npm run db:dates:local --workspace backend` después de la carga inicial de cursos para registrar esa configuración sin sobrescribirla ni volver a insertar cursos. La API entrega `dateMode`; no se deduce la modalidad a partir del número de fechas ni del nombre en el frontend.
+Para convertir las fechas iniciales del intensivo se utiliza `CONJUNTAS` en `configuracion`, clave `evento:<id>:modalidad_fechas`. Después de la conversión, `ediciones` y `fechas.edicion_id` definen la agrupación; cada reserva guarda `edicion_id`. Los seeds locales inicializan estas relaciones sin sobrescribir los cupos existentes. Véase [Ediciones e inscripciones](ediciones-inscripciones.md).
 
 `node scripts/check-date-selection.mjs` verifica ambas alternativas de la Master Class, la selección conjunta del intensivo y el resumen antes de elegir una fecha. Requiere los servidores locales en ejecución y estas fechas de prueba.
 
-La inscripción de cursos de pago sigue siendo una demostración. La persistencia de reservas por edición y los cupos independientes por edición deben resolverse al conectar esos cursos al backend; el esquema actual de reservas solo referencia el evento, no una fecha.
+Las inscripciones gratuitas y de pago se guardan por edición. Las de pago requieren confirmación manual y conservan el importe original. Las ediciones independientes tienen cupos separados; las jornadas de una misma edición comparten cupos.
 
 ## Carruseles de imágenes
 

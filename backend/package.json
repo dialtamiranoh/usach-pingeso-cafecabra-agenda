@@ -21,7 +21,11 @@
     "db:config:prod": "wrangler d1 execute cafe-cabra-agenda-db --remote --file seeds/configuracion.sql",
     "db:seed:event:local": "wrangler d1 execute cafe-cabra-agenda-db-dev --local --env local --file seeds/evento-ejemplo.sql",
     "db:seed:local": "wrangler d1 execute cafe-cabra-agenda-db-dev --local --env local --file seeds/cursos-ejemplo.sql",
-    "db:courses:local": "wrangler d1 execute cafe-cabra-agenda-db-dev --local --env local --file seeds/listar-cursos.sql"
+    "db:courses:local": "wrangler d1 execute cafe-cabra-agenda-db-dev --local --env local --file seeds/listar-cursos.sql",
+    "db:editions:local": "wrangler d1 execute cafe-cabra-agenda-db-dev --local --env local --file seeds/ediciones.sql",
+    "db:editions:dev": "wrangler d1 execute cafe-cabra-agenda-db-dev --remote --env staging --file seeds/ediciones.sql",
+    "postdb:seed:local": "npm run db:dates:local && npm run db:editions:local",
+    "postdb:seed:event:local": "npm run db:editions:local"
   },
   "dependencies": {
     "hono": "^4.0.0",

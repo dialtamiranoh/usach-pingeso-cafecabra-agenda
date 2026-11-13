@@ -87,12 +87,20 @@ El catálogo ya consulta D1 mediante `GET /api/catalogo`; muestra eventos abiert
 
 Con `npm run dev`, visitar `http://localhost:5173/` para ver los tres cursos en el inicio. Se retiró el listado de gestión y su API; la ruta antigua `/gestion/cursos` redirige al catálogo. La gestión del administrador queda para una etapa posterior.
 
-Con ambos servidores en ejecución y la carga local original sin reservas, `node scripts/check-catalog.mjs` verifica el recorrido frontend → API → D1 y que el intensivo tenga dos jornadas dentro de un solo evento. El formulario gratuito guarda al confirmar; el formulario de pago mantiene los datos en memoria. No se envían correos. No se modificó el esquema para esta consulta.
+Con ambos servidores en ejecución, `node scripts/check-catalog.mjs` verifica el recorrido frontend → API → D1 y que el intensivo tenga dos jornadas dentro de una sola edición. Los formularios gratuitos y de pago guardan reservas; los correos requieren una clave de Resend.
 
 ## Inscripción gratuita local
 
-El evento de ejemplo ya permite guardar una inscripción confirmada con código en D1 local mediante `POST /api/inscripciones`. Incluye revisión previa, validación de cupos y prevención de duplicados. No envía correos. Los cursos con pago siguen en modo de demostración. Los campos adicionales se conservan provisionalmente en `reservas.observaciones` como JSON, sin cambios de esquema. Ver `docs/inscripcion-gratuita.md` para el flujo, consultas y pruebas (`node scripts/check-enrollments.mjs`).
+El evento de ejemplo permite guardar una inscripción confirmada con código en D1 local mediante `POST /api/inscripciones`. Incluye revisión previa, validación de cupos y prevención de duplicados por edición. Los cursos con pago guardan reservas pendientes de confirmación. Los campos adicionales se conservan provisionalmente en `reservas.observaciones` como JSON. Ver `docs/inscripcion-gratuita.md` para el flujo, consultas y pruebas (`node scripts/check-enrollments.mjs`).
 
 ## Revisión compartida en dev
 
 El avance se publica en `dev` con GitHub Actions: aplica migraciones, carga `backend/seeds/catalogo-dev.sql` y despliega solo el Worker de desarrollo. La carga no sobrescribe registros existentes ni copia reservas locales. La inscripción gratuita está habilitada en local y staging; producción conserva la escritura deshabilitada. Ver `docs/pruebas-desarrollo.md` para la URL y el flujo de prueba. `node scripts/check-dev-seed.mjs` valida la carga en una D1 temporal.
+
+## Confirmación manual en el panel local
+
+La sección **Inscritos** de `/admin` permite consultar todas las inscripciones, filtrar, abrir el detalle y confirmar pagos o cancelar reservas pendientes. Se requiere sesión. La migración `0003_petite_lady_ursula.sql` registra el monto esperado de nuevas reservas, decisiones manuales y notificaciones pendientes. Aplicar con `npm run db:migrate:local --workspace backend`. Los correos requieren Resend; sin clave quedan pendientes y se pueden previsualizar o reintentar. No se alteraron los datos remotos. Ver `docs/confirmacion-manual.md` y `node scripts/check-manual-reservations.mjs` para el flujo y sus pruebas aisladas.
+
+## Ediciones y cupos por fecha
+
+La migración `0004_far_ogun.sql` relaciona cada reserva con la edición elegida. Las fechas alternativas tienen cupos independientes; las jornadas de una misma edición comparten cupos. Las reservas anteriores con varias ediciones posibles requieren asignación manual antes de confirmar. Ver `docs/ediciones-inscripciones.md`. La prueba `node scripts/check-editions.mjs` usa D1 temporal, sin modificar Cloudflare ni enviar correos reales.

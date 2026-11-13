@@ -10,7 +10,7 @@ export const adminRoutes = new Hono<{ Bindings: AppBindings }>();
 // Devuelve la sesión de Better Auth si el pedido trae una cookie válida, o null si no.
 // Como el registro público está cerrado y solo existen cuentas de administrador, tener
 // sesión equivale a ser admin.
-async function getAdminSession(env: AppBindings, headers: Headers) {
+export async function getAdminSession(env: AppBindings, headers: Headers) {
   try {
     return await createAuth(env).api.getSession({ headers });
   } catch {

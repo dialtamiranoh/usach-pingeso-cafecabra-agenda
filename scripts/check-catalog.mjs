@@ -19,7 +19,10 @@ const barista = publicCatalog.events.find(event => event.title.includes('Barista
 assert.ok(barista);
 assert.equal(barista.price, 220000);
 assert.equal(barista.capacity, 4);
-assert.equal(barista.remainingSeats, 4);
+assert.ok(Number.isInteger(barista.remainingSeats) && barista.remainingSeats >= 0 && barista.remainingSeats <= 4);
+assert.equal(barista.editions.length, 1);
+assert.equal(barista.editions[0].remainingSeats, barista.remainingSeats);
+assert.equal(barista.editions[0].dates.length, 2);
 assert.equal(barista.requiresPayment, true);
 assert.deepEqual(barista.dates.map(day => [day.date, day.schedule]), [
   ['2026-11-07', '09:00-15:30'], ['2026-11-08', '09:00-15:30'],

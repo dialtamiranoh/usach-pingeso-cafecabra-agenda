@@ -1,3 +1,4 @@
+import { AdminEnrollments } from '../features/admin/AdminEnrollments';
 import { useRealtime } from '../features/admin/useRealtime';
 
 interface Notificacion { id: number; texto: string; ts: number; }
@@ -43,6 +44,7 @@ function detalleEventos(cursos: number, catas: number): string {
 export function AdminDashboardPage({ email, onLogout }: { email?: string | null; onLogout?: () => void } = {}) {
   const [active, setActive] = useState('panel');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [inscritosVersion, setInscritosVersion] = useState(0);
   const { data, loading, error, retry } = useAdminPanel();
 
     // Campanita y tiempo real.
@@ -54,6 +56,7 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
   useRealtime(evento => {
     // Cualquier evento refresca los datos del panel en vivo.
     retry();
+    setInscritosVersion(value => value + 1);
     if (evento.tipo === 'RESERVA_NUEVA') {
       const texto = `Nueva inscripción${evento.detalle ? `: ${evento.detalle}` : ''}${evento.titulo ? ` en ${evento.titulo}` : ''}`;
       setNotis(prev => [{ id: evento.ts, texto, ts: evento.ts }, ...prev].slice(0, 20));
@@ -153,7 +156,7 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="text-lg font-semibold text-[#111111]">Panel</h1>
+            <h1 className="text-lg font-semibold text-[#111111]">{NAV.find(item => item.key === active)?.label ?? 'Panel'}</h1>
           </div>
           <div className="flex items-center gap-3">
             {/* Campanita */}
@@ -202,7 +205,7 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
         </header>
 
         <main className="flex-1 space-y-6 p-6">
-          {active === 'mantenedores' ? <MantenedoresPage /> : <>
+          {active === 'mantenedores' ? <MantenedoresPage /> : active === 'inscritos' ? <AdminEnrollments refreshKey={inscritosVersion} onChanged={retry} /> : <>
           {loading && <p className="text-sm text-[#6b6b6b]">Cargando panel...</p>}
 
           {error && !loading && (

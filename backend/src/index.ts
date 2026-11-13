@@ -7,6 +7,7 @@ import { catalogRoutes } from './routes/catalog';
 import { enrollmentRoutes } from './routes/enrollments';
 import { expireReservations } from './jobs/expire';
 import { adminRoutes } from './routes/admin';
+import { adminEnrollmentRoutes } from './routes/admin-enrollments';
 export { AgendaHub } from './realtime/AgendaHub';
 import { mantenedorRoutes } from './routes/mantenedores';
 
@@ -16,6 +17,7 @@ app.route('/api', catalogRoutes);
 app.route('/api', enrollmentRoutes);
 app.route('/api', adminRoutes);
 app.route('/api', mantenedorRoutes);
+app.route('/api', adminEnrollmentRoutes);
 
 app.get('/api/health', async c => {
   const body = await checkHealth(c.env);

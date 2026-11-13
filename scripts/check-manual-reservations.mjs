@@ -1,0 +1,93 @@
+import assert from 'node:assert/strict';
+import { readFile, readdir } from 'node:fs/promises';
+import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
+import { createServer } from 'vite';
+
+const mf = new Miniflare(convertV4MiniflareOptions({ modules: true, script: 'export default { fetch() { return new Response("ok") } }', d1Databases: { DB: 'manual-reservations-test' } }));
+const server = await createServer({ configFile: 'frontend/vite.config.ts', server: { middlewareMode: true }, appType: 'custom' });
+try {
+  const db = await mf.getD1Database('DB');
+  for (const file of (await readdir('backend/migrations')).filter(file => file.endsWith('.sql')).sort()) {
+    const sql = await readFile(`backend/migrations/${file}`, 'utf8');
+    await db.batch(sql.split('--> statement-breakpoint').filter(part => part.trim()).map(part => db.prepare(part)));
+  }
+  const { decideReservation, enrollmentDetail, listEnrollments } = await server.ssrLoadModule('/backend/src/services/reservation-decisions.ts');
+  const { sendDecisionNotification } = await server.ssrLoadModule('/backend/src/integrations/email/reservation-decision.ts');
+  const { createAuth } = await server.ssrLoadModule('/backend/src/auth/index.ts');
+  const { adminEnrollmentRoutes } = await server.ssrLoadModule('/backend/src/routes/admin-enrollments.ts');
+  const env = { APP_ENV: 'local', cafe_cabra_agenda_db: db, BETTER_AUTH_SECRET: 'temporal-test-secret-at-least-thirty-two-characters', BETTER_AUTH_URL: 'http://localhost:5173', BETTER_AUTH_TRUSTED_ORIGINS: 'http://localhost:5173', AGENDA_HUB: { idFromName: () => 'test', get: () => ({ fetch: async () => new Response('ok') }) } };
+  const auth = createAuth(env, { allowSignUp: true });
+  const owner = await auth.api.signUpEmail({ body: { email: 'owner@example.com', name: 'Dueño de prueba', password: 'solo-prueba-temporal' } });
+  const actor = owner.user.id;
+  const login = await auth.api.signInEmail({ body: { email: 'owner@example.com', password: 'solo-prueba-temporal' }, asResponse: true });
+  const cookie = login.headers.getSetCookie().map(value => value.split(';')[0]).join('; ');
+  assert.ok(cookie);
+  await db.prepare("INSERT INTO tipo_evento(id,nombre,requiere_pago) VALUES(1,'Curso',1),(2,'Evento',0)").run();
+  await db.prepare("INSERT INTO ubicaciones(id,nombre) VALUES(1,'Café de prueba')").run();
+  await db.prepare("INSERT INTO eventos(id,tipo_evento_id,ubicacion_id,nombre,precio,cupo_maximo,estado) VALUES(1,1,1,'Latte Art',65000,20,'ABIERTO'),(2,2,1,'Cata gratuita',0,20,'ABIERTO')").run();
+  for (let id = 1; id <= 8; id++) {
+    await db.prepare(`INSERT INTO reservas(id,evento_id,codigo,reservado_por_nombre,reservado_por_correo,reservado_para_nombre,estado,expira_en,monto_esperado)
+      VALUES(?,?,?,'Contacto de prueba',?,'Alumno de prueba',?,?,?)`).bind(id, id === 4 ? 2 : 1, `TEST-${id}`, `test${id}@example.com`, id === 4 ? 'CONFIRMADO' : 'RESERVADO', Math.floor(Date.now() / 1000) + (id === 3 ? -3600 : 3600), id === 8 ? null : id === 4 ? 0 : 65000).run();
+  }
+  await db.prepare("INSERT INTO fechas(evento_id,fecha,horario) VALUES(1,'2026-12-14','10:00-12:00'),(2,'2026-12-14','10:00-12:00')").run();
+  const editionSql = await readFile('backend/seeds/ediciones.sql', 'utf8');
+  await db.batch(editionSql.split('--> statement-breakpoint').filter(part => part.trim()).map(part => db.prepare(part)));
+  const confirm = () => ({ requestId: crypto.randomUUID(), action: 'CONFIRMAR', reason: '', paymentVerified: true });
+  const cancel = () => ({ requestId: crypto.randomUUID(), action: 'CANCELAR', reason: 'No se recibió el pago.', paymentVerified: false });
+  assert.equal((await adminEnrollmentRoutes.request('/admin/inscritos', {}, env)).status, 401);
+  assert.equal((await adminEnrollmentRoutes.request('/admin/inscritos', { headers: { Cookie: cookie } }, env)).status, 200);
+  const anonymous = await adminEnrollmentRoutes.request('/admin/inscritos/1/decision', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(confirm()) }, env);
+  assert.equal(anonymous.status, 401);
+  const crossOrigin = await adminEnrollmentRoutes.request('/admin/inscritos/1/decision', { method: 'POST', headers: { Cookie: cookie, Origin: 'https://example.org', 'Content-Type': 'application/json' }, body: JSON.stringify(confirm()) }, env);
+  assert.equal(crossOrigin.status, 403);
+  await assert.rejects(decideReservation(db, 1, actor, { ...confirm(), paymentVerified: false }));
+  await assert.rejects(decideReservation(db, 2, actor, { ...cancel(), reason: ' ' }));
+  await assert.rejects(decideReservation(db, 3, actor, confirm()));
+  await assert.rejects(decideReservation(db, 4, actor, confirm()));
+  assert.equal((await listEnrollments(db, 'EXPIRADO', '', 1)).total, 1);
+  assert.equal((await listEnrollments(db, '', 'TEST-1', 1)).total, 1);
+  const input = confirm();
+  const confirmed = await decideReservation(db, 1, actor, input);
+  assert.equal(confirmed.detail.status, 'CONFIRMADO');
+  assert.equal(confirmed.detail.notification.status, 'PENDIENTE');
+  assert.ok(confirmed.detail.notification.message.includes('\n'));
+  assert.equal((await db.prepare('SELECT origen_confirmacion,actualizado_por FROM reservas WHERE id=1').first()).origen_confirmacion, 'MANUAL');
+  assert.equal((await decideReservation(db, 1, actor, input)).changed, false);
+  await assert.rejects(decideReservation(db, 1, actor, { ...cancel(), requestId: input.requestId }));
+  await assert.rejects(decideReservation(db, 1, actor, confirm()));
+  const canceled = await decideReservation(db, 2, actor, cancel());
+  assert.equal(canceled.detail.status, 'CANCELADO');
+  assert.equal(canceled.detail.decision.reason, 'No se recibió el pago.');
+  assert.equal((await db.prepare("SELECT COUNT(*) AS n FROM reservas WHERE id=2 AND estado IN ('CONFIRMADO','RESERVADO')").first()).n, 0);
+  const notice = confirmed.detail.notification.id;
+  await sendDecisionNotification(db, notice);
+  assert.equal((await enrollmentDetail(db, 1)).notification.status, 'PENDIENTE');
+  await sendDecisionNotification(db, notice, undefined, async () => { throw new Error('Error simulado'); });
+  assert.equal((await enrollmentDetail(db, 1)).status, 'CONFIRMADO');
+  assert.equal((await enrollmentDetail(db, 1)).notification.status, 'ERROR');
+  let sends = 0;
+  const sender = async mail => { sends++; assert.equal(mail.to, 'test1@example.com'); assert.ok(mail.key); return 'simulated-provider-id'; };
+  await Promise.all([sendDecisionNotification(db, notice, undefined, sender), sendDecisionNotification(db, notice, undefined, sender)]);
+  assert.equal(sends, 1);
+  assert.equal((await enrollmentDetail(db, 1)).notification.status, 'ENVIADO');
+  await sendDecisionNotification(db, notice, undefined, sender);
+  assert.equal(sends, 1);
+  const simultaneous = await Promise.allSettled([decideReservation(db, 5, actor, confirm()), decideReservation(db, 5, actor, cancel())]);
+  assert.equal(simultaneous.filter(result => result.status === 'fulfilled').length, 1);
+  const same = confirm();
+  const replay = await Promise.all([decideReservation(db, 6, actor, same), decideReservation(db, 6, actor, same)]);
+  assert.equal(replay.filter(result => result.changed).length, 1);
+  await db.prepare("CREATE TRIGGER fail_notice BEFORE INSERT ON notificaciones_reserva BEGIN SELECT RAISE(ABORT,'simulated failure'); END").run();
+  await assert.rejects(decideReservation(db, 7, actor, confirm()));
+  assert.equal((await enrollmentDetail(db, 7)).status, 'RESERVADO');
+  assert.equal((await enrollmentDetail(db, 7)).decision, null);
+  await db.prepare('DROP TRIGGER fail_notice').run();
+  await db.prepare('UPDATE eventos SET precio=99000 WHERE id=1').run();
+  assert.equal((await enrollmentDetail(db, 1)).amount, 65000);
+  assert.equal((await enrollmentDetail(db, 8)).amountRecorded, false);
+  assert.equal((await enrollmentDetail(db, 8)).amount, 99000);
+  const routeDecision = await adminEnrollmentRoutes.request('/admin/inscritos/7/decision', { method: 'POST', headers: { Cookie: cookie, Origin: 'http://localhost:5173', 'Content-Type': 'application/json' }, body: JSON.stringify(confirm()) }, env);
+  assert.equal(routeDecision.status, 200);
+  assert.equal((await routeDecision.json()).status, 'CONFIRMADO');
+  console.log('OK: sesión y origen, confirmar/cancelar, vencimiento, filtros, precio original, reintentos, concurrencia, rollback y notificaciones simuladas. No se enviaron correos reales.');
+} finally { await server.close(); await mf.dispose(); }
