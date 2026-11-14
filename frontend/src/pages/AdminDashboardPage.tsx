@@ -10,6 +10,7 @@ import type { ChartConfiguration } from 'chart.js/auto';
 import { useAdminPanel, formatFechaEvento, formatFechaInscripcion, formatMonto } from '../features/admin/useAdminPanel';
 import { ChartCanvas } from '../features/admin/ChartCanvas';
 import { MantenedoresPage } from './MantenedoresPage';
+import { EventosAdminPage } from './EventosAdminPage';
 import { FaGauge, FaCalendarDays, FaUsers, FaMoneyBillTransfer, FaSliders, FaGear, FaArrowLeftLong } from 'react-icons/fa6';
 
 // Panel de administración. Portado del template analytics-dashboard de HyperUI
@@ -205,7 +206,7 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
         </header>
 
         <main className="flex-1 space-y-6 p-6">
-          {active === 'mantenedores' ? <MantenedoresPage /> : active === 'inscritos' ? <AdminEnrollments refreshKey={inscritosVersion} onChanged={retry} /> : <>
+          {active === 'mantenedores' ? <MantenedoresPage /> : active === 'eventos' ? <EventosAdminPage onChanged={retry} /> : active === 'inscritos' ? <AdminEnrollments refreshKey={inscritosVersion} onChanged={retry} /> : <>
           {loading && <p className="text-sm text-[#6b6b6b]">Cargando panel...</p>}
 
           {error && !loading && (
