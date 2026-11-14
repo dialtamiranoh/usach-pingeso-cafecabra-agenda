@@ -1,9 +1,6 @@
 import type { ReactNode } from 'react';
 import { formatPrice, type CatalogItem } from '../catalog/catalog-data';
 import { formatSessionDate, type BookingSession } from './booking-data';
-import { FaArrowRightLong } from 'react-icons/fa6';
-import { EstadoBadge } from '../../components/EstadoBadge';
-import { ActionButton } from '../../components/ActionButton';
 
 export function ReservationSummary({ course, session, dateSelected = Boolean(session), previewDays = [], persisted = false, children }: { course: CatalogItem; session?: BookingSession; dateSelected?: boolean; previewDays?: BookingSession['days']; persisted?: boolean; children?: ReactNode }) {
   return (

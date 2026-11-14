@@ -1,7 +1,6 @@
 import { AdminEnrollments } from '../features/admin/AdminEnrollments';
 import { useRealtime } from '../features/admin/useRealtime';
 import { EstadoBadge } from '../components/EstadoBadge';
-import { ActionButton } from '../components/ActionButton';
 
 interface Notificacion { id: number; texto: string; ts: number; }
 
@@ -11,7 +10,7 @@ import type { ChartConfiguration } from 'chart.js/auto';
 import { useAdminPanel, formatFechaEvento, formatFechaInscripcion, formatMonto } from '../features/admin/useAdminPanel';
 import { ChartCanvas } from '../features/admin/ChartCanvas';
 import { MantenedoresPage } from './MantenedoresPage';
-import { FaGauge, FaCalendarDays, FaUsers, FaMoneyBillTransfer, FaSliders, FaGear } from 'react-icons/fa6';
+import { FaGauge, FaCalendarDays, FaUsers, FaMoneyBillTransfer, FaSliders, FaGear, FaArrowLeftLong } from 'react-icons/fa6';
 
 // Panel de administración. Portado del template analytics-dashboard de HyperUI
 // (sidebar colapsable, tarjetas, gráfico de línea, dona y tabla) con Chart.js,
@@ -30,12 +29,6 @@ const NAV = [
 const COLORES_ESTADO: Record<string, string> = {
   Confirmado: '#111111', Reservado: '#e6bb08', Expirado: '#d4d4d4', 'En espera': '#9a9a9a', Cancelado: '#8a8378',
 };
-
-// function estadoClase(estado: string): string {
-//   if (estado === 'Confirmado' || estado === 'Abierto') return 'bg-[#fdf3c9] text-[#7a6200]';
-//   if (estado === 'Reservado' || estado === 'En espera') return 'bg-[#f1f1ef] text-[#555]';
-//   return 'bg-[#eceae4] text-[#8a8378]';
-// }
 
 
 
@@ -146,7 +139,7 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
               <span className="block truncate text-[#6b6b6b]">{email ?? ''}</span>
             </p>
           </div>
-                    <Link to="/" className="block border-t border-[#e5e5e5] p-4 text-xs text-[#6b6b6b] hover:bg-[#f5f5f4]">← Volver al sitio</Link>
+                    <Link to="/" className="flex items-center gap-2 border-t border-[#e5e5e5] p-4 text-xs text-[#6b6b6b] hover:bg-[#f5f5f4]"><FaArrowLeftLong aria-hidden="true" /> Volver al sitio</Link>
           {onLogout && (
             <button type="button" onClick={onLogout} className="block w-full border-t border-[#e5e5e5] p-4 text-left text-xs font-medium text-[#6b6b6b] hover:bg-[#f5f5f4]">
               Cerrar sesión

@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { AdminDashboardPage } from './AdminDashboardPage';
 import { AdminLoginPage } from './AdminLoginPage';
 import { useAdminSession, signOutAdmin } from '../features/admin/useAdminSession';
-import { FaArrowRightLong } from 'react-icons/fa6';
 
 
 // Controla el acceso a /admin: muestra el login si no hay sesión, o el panel si la hay.

@@ -3,8 +3,6 @@ import { Breadcrumbs } from '../components/Breadcrumbs';
 import { ImageGallery } from '../components/ImageGallery';
 import { formatPrice, type CatalogItem } from '../features/catalog/catalog-data';
 import { FaArrowRightLong } from 'react-icons/fa6';
-import { EstadoBadge } from '../components/EstadoBadge';
-import { ActionButton } from '../components/ActionButton';
 
 export function CourseDetailPage({ course }: { course: CatalogItem }) {
   return (
@@ -24,7 +22,7 @@ export function CourseDetailPage({ course }: { course: CatalogItem }) {
       </section>
       <section className="panel reserve-callout" aria-labelledby="reserve-title">
         <div><h2 id="reserve-title">Reserva tu experiencia</h2><p className="muted">{course.dateMode === 'CONJUNTAS' ? 'La inscripción incluye todas las jornadas del curso.' : 'Consulta las fechas disponibles y elige cuándo participar.'}</p></div>
-        {course.status === 'ABIERTO' ? <Link className="button button-dark" to={`/cursos/${course.id}/agenda`}>Ver disponibilidad <span aria-hidden="true">→</span></Link> : <p>Pronto confirmaremos los horarios para inscribirte.</p>}
+        {course.status === 'ABIERTO' ? <Link className="button button-dark" to={`/cursos/${course.id}/agenda`}>Ver disponibilidad <FaArrowRightLong aria-hidden="true" /></Link> : <p>Pronto confirmaremos los horarios para inscribirte.</p>}
       </section>
       <section className="learning-section" aria-labelledby="learning-title">
         <h2 id="learning-title">¿Qué aprenderás?</h2>

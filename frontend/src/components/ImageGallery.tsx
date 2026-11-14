@@ -1,6 +1,4 @@
 import { useId, useState } from 'react';
-import { EstadoBadge } from '../components/EstadoBadge';
-import { ActionButton } from '../components/ActionButton';
 
 export function ImageGallery({ images, title }: { images: string[]; title: string }) {
   const [selected, setSelected] = useState(0);

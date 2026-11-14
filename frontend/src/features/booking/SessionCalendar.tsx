@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { formatSessionDate, type BookingSession } from './booking-data';
-import { FaArrowRightLong } from 'react-icons/fa6';
-import { EstadoBadge } from '../../components/EstadoBadge';
-import { ActionButton } from '../../components/ActionButton';
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa6';
 
 export function SessionCalendar({ sessions, selectedDate, selectedDates = [selectedDate], onSelectDate }: {
   sessions: BookingSession[];
@@ -25,9 +23,9 @@ export function SessionCalendar({ sessions, selectedDate, selectedDates = [selec
   return (
     <div className="calendar">
       <div className="calendar-toolbar">
-        <button type="button" className="calendar-arrow" aria-label="Mes anterior" disabled={monthIndex === 0} onClick={() => setMonth(months[monthIndex - 1])}>←</button>
+        <button type="button" className="calendar-arrow" aria-label="Mes anterior" disabled={monthIndex === 0} onClick={() => setMonth(months[monthIndex - 1])}><FaChevronLeft aria-hidden="true" /></button>
         <h3 aria-live="polite">{label}</h3>
-        <button type="button" className="calendar-arrow" aria-label="Mes siguiente" disabled={monthIndex === months.length - 1} onClick={() => setMonth(months[monthIndex + 1])}>→</button>
+        <button type="button" className="calendar-arrow" aria-label="Mes siguiente" disabled={monthIndex === months.length - 1} onClick={() => setMonth(months[monthIndex + 1])}><FaChevronRight aria-hidden="true" /></button>
       </div>
       <div className="calendar-weekdays" aria-hidden="true">{['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do'].map(day => <span key={day}>{day}</span>)}</div>
       <div className="calendar-days" role="group" aria-label={`Fechas de ${label}`}>

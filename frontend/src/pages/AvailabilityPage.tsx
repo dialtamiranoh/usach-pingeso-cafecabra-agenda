@@ -7,8 +7,6 @@ import { formatSessionDate } from '../features/booking/booking-data';
 import { SessionCalendar } from '../features/booking/SessionCalendar';
 import { ReservationSummary } from '../features/booking/ReservationSummary';
 import { FaArrowRightLong } from 'react-icons/fa6';
-import { EstadoBadge } from '../components/EstadoBadge';
-import { ActionButton } from '../components/ActionButton';
 
 
 export function AvailabilityPage({ course }: { course: CatalogItem }) {
@@ -57,7 +55,7 @@ export function AvailabilityPage({ course }: { course: CatalogItem }) {
           </section>
         </section>
         <ReservationSummary course={course} session={selected} dateSelected={Boolean(activeDate)} previewDays={dailySessions[0]?.days}>
-          {selected ? <Link className="button button-dark" to={`/cursos/${course.id}/inscripcion?sesion=${selected.id}`}>Continuar inscripción <span aria-hidden="true">→</span></Link>
+          {selected ? <Link className="button button-dark" to={`/cursos/${course.id}/inscripcion?sesion=${selected.id}`}>Continuar inscripción <FaArrowRightLong aria-hidden="true" /></Link>
             : <button type="button" className="button button-dark" disabled>Selecciona fecha y horario</button>}
           <Link className="button button-outline" to={`/cursos/${course.id}`}>Volver al curso</Link>
         </ReservationSummary>

@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { signInAdmin } from '../features/admin/useAdminSession';
-import { FaArrowRightLong } from 'react-icons/fa6';
-import { EstadoBadge } from '../components/EstadoBadge';
-import { ActionButton } from '../components/ActionButton';
+import { FaArrowLeftLong } from 'react-icons/fa6';
 
 // Login del panel, construido con el markup de formulario de HyperUI (card + inputs + botón
 // con hover invertido), adaptado a la paleta del panel: negro, blanco y acento #e6bb08.
@@ -77,8 +75,8 @@ export function AdminLoginPage({ onLoggedIn }: { onLoggedIn: () => void }) {
           {enviando ? 'Ingresando...' : 'Ingresar'}
         </button>
 
-        <Link to="/" className="block text-center text-xs text-[#6b6b6b] hover:underline">
-          ← Volver al sitio
+        <Link to="/" className="flex items-center justify-center gap-1 text-xs text-[#6b6b6b] hover:underline">
+          <FaArrowLeftLong aria-hidden="true" /> Volver al sitio
         </Link>
       </form>
     </div>

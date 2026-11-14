@@ -3,8 +3,6 @@ import type { CatalogItem } from '../features/catalog/catalog-data';
 import { HeroVideo } from '../components/HeroVideo';
 import { CourseCard } from '../features/catalog/CourseCard';
 import { FaArrowRightLong } from 'react-icons/fa6';
-import { EstadoBadge } from '../components/EstadoBadge';
-import { ActionButton } from '../components/ActionButton';
 
 export function CatalogPage({ items: catalogItems, loading, error, retry }: { items: CatalogItem[]; loading: boolean; error: string; retry: () => void }) {
   const navigate = useNavigate();
@@ -12,7 +10,7 @@ export function CatalogPage({ items: catalogItems, loading, error, retry }: { it
     <main id="contenido">
       <section className="hero" id="inicio" aria-labelledby="hero-title">
         <div className="container hero-inner">
-          <div><p className="eyebrow">CAFÉ CABRA · ESCUELA</p><h1 id="hero-title">Aprende el arte<br />del café.</h1><p className="hero-description">Descubre nuestros cursos y experiencias de café de especialidad. Aprende, practica y comparte tu pasión por el café.</p><a className="button button-dark" href="#cursos">Explorar cursos <span aria-hidden="true">→</span></a></div>
+          <div><p className="eyebrow">CAFÉ CABRA · ESCUELA</p><h1 id="hero-title">Aprende el arte<br />del café.</h1><p className="hero-description">Descubre nuestros cursos y experiencias de café de especialidad. Aprende, practica y comparte tu pasión por el café.</p><a className="button button-dark" href="#cursos">Explorar cursos <FaArrowRightLong aria-hidden="true" /></a></div>
           <HeroVideo />
         </div>
       </section>

@@ -1,6 +1,4 @@
 import { Link } from 'react-router-dom';
-import { EstadoBadge } from '../components/EstadoBadge';
-import { ActionButton } from '../components/ActionButton';
 
 export function Breadcrumbs({ items }: { items: { label: string; to?: string }[] }) {
   return (

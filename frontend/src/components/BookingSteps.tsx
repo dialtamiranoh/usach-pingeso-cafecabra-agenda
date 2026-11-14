@@ -1,5 +1,3 @@
-import { EstadoBadge } from '../components/EstadoBadge';
-import { ActionButton } from '../components/ActionButton';
 
 export function BookingSteps({ current, requiresPayment = true }: { current: number; requiresPayment?: boolean }) {
   const steps = requiresPayment ? ['Elige tu fecha', 'Tus datos', 'Transferencia', 'Revisión'] : ['Elige tu fecha', 'Tus datos', 'Revisión'];

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams, useSearchParams } from 'react-router-dom';
+import { FaArrowRightLong } from 'react-icons/fa6';
 import { SiteLayout } from './components/SiteLayout';
 import { CatalogPage } from './pages/CatalogPage';
 import { CourseDetailPage } from './pages/CourseDetailPage';
@@ -32,7 +33,7 @@ function NotFoundPage() {
   return <main id="contenido" className="container experience-page">
     <p className="eyebrow">CAFÉ CABRA</p><h1>No encontramos esta página</h1>
     <p className="muted">Puedes volver al catálogo y elegir una de nuestras experiencias.</p>
-    <Link to="/" className="button button-dark">Volver al catálogo →</Link>
+    <Link to="/" className="button button-dark">Volver al catálogo <FaArrowRightLong aria-hidden="true" /></Link>
   </main>;
 }
 

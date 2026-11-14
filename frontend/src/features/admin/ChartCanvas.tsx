@@ -1,8 +1,5 @@
 import { useEffect, useRef } from 'react';
 import Chart, { type ChartConfiguration } from 'chart.js/auto';
-import { FaArrowRightLong } from 'react-icons/fa6';
-//import { EstadoBadge } from '../src/components/EstadoBadge';
-//import { ActionButton } from '../src/components/ActionButton';
 
 // Envoltorio mínimo de Chart.js: crea el gráfico al montar y lo destruye al desmontar.
 // El template de HyperUI usa Chart.js para sparkline, línea y dona.

@@ -8,9 +8,7 @@ import { ReservationSummary } from '../features/booking/ReservationSummary';
 import { DietaryFields, InstagramField, TransferFields } from '../features/booking/EnrollmentExtraFields';
 import { dietaryLabel } from '../features/booking/enrollment-options';
 import type { EnrollmentReceipt, FreeEnrollmentRequest, PaidEnrollmentRequest } from '@cafecabra/shared';
-import { FaArrowRightLong } from 'react-icons/fa6';
-import { EstadoBadge } from '../components/EstadoBadge';
-import { ActionButton } from '../components/ActionButton';
+import { FaArrowLeftLong, FaArrowRightLong } from 'react-icons/fa6';
 
 const clpFormat = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
 function formatDeadline(epoch: number): string {
@@ -138,7 +136,7 @@ export function EnrollmentPage({ course, session, draft, onChange, step }: {
           <p className="form-demo-note">{course.requiresPayment ? 'Al confirmar crearemos tu reserva y te enviaremos los datos de transferencia por correo.' : 'Tus datos se guardarán al confirmar la inscripción en el siguiente paso.'}</p>
         </section>
         <ReservationSummary course={course} session={session}>
-          <button type="submit" className="button button-dark">{!isTransfer && course.requiresPayment ? 'Continuar a transferencia' : 'Revisar inscripción'} <span aria-hidden="true">→</span></button>
+          <button type="submit" className="button button-dark">{!isTransfer && course.requiresPayment ? 'Continuar a transferencia' : 'Revisar inscripción'} <FaArrowRightLong aria-hidden="true" /></button>
           <Link className="button button-outline" to={isTransfer ? personalPath : `/cursos/${course.id}/agenda?sesion=${session.id}`}>{isTransfer ? 'Volver a mis datos' : 'Cambiar fecha u horario'}</Link>
         </ReservationSummary>
       </form>
@@ -167,7 +165,7 @@ export function EnrollmentPage({ course, session, draft, onChange, step }: {
           <p className="dialog-note">{course.requiresPayment ? 'Al confirmar crearemos tu reserva y te mostraremos los datos para transferir. Tu cupo se mantiene hasta que venza el plazo de pago.' : 'Al confirmar reservaremos tu lugar en el evento.'}</p>
           {saveError && <p role="alert" className="field-error">{saveError}</p>}
           <button type="button" className="button button-dark" disabled={pending} onClick={confirmEnrollment}>{pending ? (course.requiresPayment ? 'Creando reserva…' : 'Guardando inscripción…') : (course.requiresPayment ? 'Confirmar y ver datos de transferencia' : 'Confirmar inscripción gratuita')}</button>
-          <button type="button" className="button button-outline" disabled={pending} onClick={() => review.current?.close()}>{isTransfer ? 'Volver a transferencia' : 'Volver a mis datos'} <span aria-hidden="true">→</span></button>
+          <button type="button" className="button button-outline" disabled={pending} onClick={() => review.current?.close()}><FaArrowLeftLong aria-hidden="true" /> {isTransfer ? 'Volver a transferencia' : 'Volver a mis datos'}</button>
         </div>
       </dialog>
     </main>

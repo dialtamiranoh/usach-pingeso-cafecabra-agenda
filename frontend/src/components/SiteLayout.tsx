@@ -1,9 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { FaInstagram, FaMugHot } from 'react-icons/fa6';
+import { FaArrowRightLong, FaInstagram, FaMugHot } from 'react-icons/fa6';
 import { BrandLogo } from './BrandLogo';
-import { EstadoBadge } from '../components/EstadoBadge';
-import { ActionButton } from '../components/ActionButton';
 
 
 export function SiteLayout({children}:{children:ReactNode}) {
@@ -13,7 +11,7 @@ export function SiteLayout({children}:{children:ReactNode}) {
       <header className="site-header">
         <div className="container header-inner">
           <Link className="brand-link" to="/" aria-label="Café Cabra, inicio"><BrandLogo /></Link>
-          <nav aria-label="Navegación principal"><Link to="/#cursos">Cursos y experiencias ↗</Link></nav>
+          <nav aria-label="Navegación principal"><Link to="/#cursos">Cursos y experiencias <FaArrowRightLong aria-hidden="true" /></Link></nav>
         </div>
       </header>
       {children}
