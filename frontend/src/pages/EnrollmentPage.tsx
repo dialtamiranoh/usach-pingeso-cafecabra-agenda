@@ -66,7 +66,7 @@ export function EnrollmentPage({ course, session, draft, onChange, step }: {
       <section className="panel course-information" role="status">
         <p className="eyebrow">CAFÉ CABRA</p>
         {receipt.status === 'RESERVADO' && transfer ? <>
-          <h1>Reserva creada — realiza tu transferencia</h1>
+          <h1>Reserva creada: realiza tu transferencia</h1>
           <p>{course.title}</p>
           <p>Para confirmar tu cupo, transfiere <strong>{clpFormat.format(transfer.monto)}</strong> con estos datos:</p>
           <dl className="review-data">
@@ -145,7 +145,7 @@ export function EnrollmentPage({ course, session, draft, onChange, step }: {
           <button type="button" className="dialog-close" aria-label="Cerrar revisión" disabled={pending} onClick={() => review.current?.close()}>×</button>
           <p className="eyebrow">REVISIÓN DE INSCRIPCIÓN</p><h2 id="review-title">Revisa tus datos</h2>
           <p>{course.title}</p>
-          {session.days.map(day => <p key={`${day.date}-${day.startTime}`}>{formatSessionDate(day.date)} · {day.startTime} – {day.endTime}</p>)}
+          {session.days.map(day => <p key={`${day.date}-${day.startTime}`}>{formatSessionDate(day.date)} • {day.startTime} – {day.endTime}</p>)}
           <dl className="review-data">
             <div><dt>Nombre</dt><dd>{draft.name}</dd></div><div><dt>Correo</dt><dd>{draft.email}</dd></div><div><dt>Teléfono</dt><dd>{draft.phone}</dd></div>
             {draft.instagram.trim() && <div><dt>Instagram</dt><dd>@{draft.instagram.trim().replace(/^@/, '')}</dd></div>}

@@ -43,10 +43,10 @@ export function ImageCarousel({ images, title, className = '', eager = false }: 
           if (event.target === event.currentTarget && event.propertyName === 'transform' && index === images.length) setIndex(0);
         }}>
         {slides.map((url, position) => <img key={`${position}-${url}`} className="carousel-slide" src={url}
-          alt={position === images.length ? '' : `${title} · fotografía ${position + 1}`}
+          alt={position === images.length ? '' : `${title}, fotografía ${position + 1}`}
           aria-hidden={position !== active || position === images.length}
           loading={eager && position === 0 ? 'eager' : 'lazy'} draggable={false} />)}
-      </div> : <div className="course-placeholder">CAFÉ CABRA · ESCUELA</div>}
+      </div> : <div className="course-placeholder">CAFÉ CABRA • ESCUELA</div>}
     </div>
   </div>;
 }

@@ -10,7 +10,7 @@ export function CatalogPage({ items: catalogItems, loading, error, retry }: { it
     <main id="contenido">
       <section className="hero" id="inicio" aria-labelledby="hero-title">
         <div className="container hero-inner">
-          <div><p className="eyebrow">CAFÉ CABRA · ESCUELA</p><h1 id="hero-title">Aprende el arte<br />del café.</h1><p className="hero-description">Descubre nuestros cursos y experiencias de café de especialidad. Aprende, practica y comparte tu pasión por el café.</p><a className="button button-dark" href="#cursos">Explorar cursos <FaArrowRightLong aria-hidden="true" /></a></div>
+          <div><p className="eyebrow">CAFÉ CABRA • ESCUELA</p><h1 id="hero-title">Aprende el arte<br />del café.</h1><p className="hero-description">Descubre nuestros cursos y experiencias de café de especialidad. Aprende, practica y comparte tu pasión por el café.</p><a className="button button-dark" href="#cursos">Explorar cursos <FaArrowRightLong aria-hidden="true" /></a></div>
           <HeroVideo />
         </div>
       </section>
@@ -21,7 +21,7 @@ export function CatalogPage({ items: catalogItems, loading, error, retry }: { it
         {error && <div role="alert"><p>{error}</p><button className="button button-dark" onClick={retry}>Reintentar</button></div>}
         {!loading && !error && !catalogItems.length && <p>No hay cursos ni catas disponibles por el momento.</p>}
         <div className="course-grid">{catalogItems.map(item => <CourseCard key={item.id} item={item} onSelect={course => navigate(`/cursos/${course.id}`)} />)}</div>
-        <p className="demo-note">Cursos y eventos · Café Cabra</p>
+        <p className="demo-note">Cursos y eventos • Café Cabra</p>
       </section>
     </main>
   );

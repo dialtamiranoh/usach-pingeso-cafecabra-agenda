@@ -7,8 +7,8 @@ export function ImageGallery({ images, title }: { images: string[]; title: strin
 
   return <div className="image-gallery" role="group" aria-label={`Galería de ${title}`}>
     <div className="gallery-main detail-photo" id={photoId}>
-      {images.length ? <img key={images[active]} src={images[active]} alt={`${title} · fotografía ${active + 1}`} />
-        : <div className="course-placeholder">CAFÉ CABRA · ESCUELA</div>}
+      {images.length ? <img key={images[active]} src={images[active]} alt={`${title}, fotografía ${active + 1}`} />
+        : <div className="course-placeholder">CAFÉ CABRA • ESCUELA</div>}
     </div>
     {images.length > 1 && <div className="gallery-thumbnails" role="group" aria-label="Elegir fotografía">
       {images.map((url, index) => <button key={`${index}-${url}`} type="button" className="gallery-thumbnail"
