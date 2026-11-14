@@ -49,7 +49,17 @@ export async function signInAdmin(email: string, password: string): Promise<stri
   }
 }
 
-// Cierra la sesión actual.
-export async function signOutAdmin(): Promise<void> {
-  try { await fetch('/api/auth/sign-out', { method: 'POST', credentials: 'include' }); } catch { /* sin bloqueo */ }
+// Cierra la sesión actual. Devuelve true si el servidor confirmó el cierre.
+export async function signOutAdmin(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/auth/sign-out', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: '{}',
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }

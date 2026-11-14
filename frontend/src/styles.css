@@ -278,6 +278,13 @@ main h1:focus-visible { outline: none; }
 @media (prefers-reduced-motion: reduce) { .carousel-track { transition: none; } }
 
 
+
+/* Navegacion principal: varios enlaces separados */
+.header-inner nav{display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:flex-end}
+/* Acceso admin: pildora discreta sobre el header oscuro */
+.header-inner nav a.nav-admin{border:1px solid #ffffff33;border-radius:999px;padding:6px 12px;color:#ffffffcc}
+.header-inner nav a.nav-admin:hover{color:var(--accent);border-color:var(--accent);text-decoration:none}
+
 /* Alineacion de iconos (react-icons) junto al texto */
 .header-inner nav a{display:inline-flex;align-items:center;gap:6px}
 .footer-links a{display:inline-flex;align-items:center;gap:6px}

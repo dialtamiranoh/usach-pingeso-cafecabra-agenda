@@ -18,5 +18,10 @@ export function AdminGate() {
     return <AdminLoginPage onLoggedIn={refresh} />;
   }
 
-  return <AdminDashboardPage email={session.email} onLogout={async () => { await signOutAdmin(); await refresh(); }} />;
+  return <AdminDashboardPage email={session.email} onLogout={async () => {
+    await signOutAdmin();
+    // Recarga la ruta del panel: vuelve a consultar la sesión desde cero y, si se cerró,
+    // muestra el login. Evita quedar en el panel por un estado desactualizado en memoria.
+    window.location.assign('/admin');
+  }} />;
 }
