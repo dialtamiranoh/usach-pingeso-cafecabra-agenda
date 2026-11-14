@@ -36,6 +36,13 @@
       "when": 1794514223117,
       "tag": "0004_far_ogun",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1794691561114,
+      "tag": "0005_tipo_evento_cata",
+      "breakpoints": true
     }
   ]
 }
