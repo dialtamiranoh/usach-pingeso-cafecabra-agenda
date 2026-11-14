@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { signInAdmin } from '../features/admin/useAdminSession';
+import { FaArrowRightLong } from 'react-icons/fa6';
+import { EstadoBadge } from '../components/EstadoBadge';
+import { ActionButton } from '../components/ActionButton';
 
 // Login del panel, construido con el markup de formulario de HyperUI (card + inputs + botón
 // con hover invertido), adaptado a la paleta del panel: negro, blanco y acento #e6bb08.

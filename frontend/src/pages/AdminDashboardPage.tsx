@@ -1,5 +1,7 @@
 import { AdminEnrollments } from '../features/admin/AdminEnrollments';
 import { useRealtime } from '../features/admin/useRealtime';
+import { EstadoBadge } from '../components/EstadoBadge';
+import { ActionButton } from '../components/ActionButton';
 
 interface Notificacion { id: number; texto: string; ts: number; }
 
@@ -9,18 +11,19 @@ import type { ChartConfiguration } from 'chart.js/auto';
 import { useAdminPanel, formatFechaEvento, formatFechaInscripcion, formatMonto } from '../features/admin/useAdminPanel';
 import { ChartCanvas } from '../features/admin/ChartCanvas';
 import { MantenedoresPage } from './MantenedoresPage';
+import { FaGauge, FaCalendarDays, FaUsers, FaMoneyBillTransfer, FaSliders, FaGear } from 'react-icons/fa6';
 
 // Panel de administración. Portado del template analytics-dashboard de HyperUI
 // (sidebar colapsable, tarjetas, gráfico de línea, dona y tabla) con Chart.js,
 // adaptado a la paleta negro / blanco / #e6bb08 y a los datos reales de /api/admin/panel.
 
 const NAV = [
-  { key: 'panel', label: 'Panel' },
-  { key: 'eventos', label: 'Eventos' },
-  { key: 'inscritos', label: 'Inscritos' },
-  { key: 'pagos', label: 'Pagos' },
-  { key: 'mantenedores', label: 'Mantenedores' },
-  { key: 'configuracion', label: 'Configuración' },
+  { key: 'panel', label: 'Panel', Icon: FaGauge },
+  { key: 'eventos', label: 'Eventos', Icon: FaCalendarDays },
+  { key: 'inscritos', label: 'Inscritos', Icon: FaUsers },
+  { key: 'pagos', label: 'Pagos', Icon: FaMoneyBillTransfer },
+  { key: 'mantenedores', label: 'Mantenedores', Icon: FaSliders },
+  { key: 'configuracion', label: 'Configuración', Icon: FaGear },
 ];
 
 // Colores de la dona por estado de reserva.
@@ -28,11 +31,13 @@ const COLORES_ESTADO: Record<string, string> = {
   Confirmado: '#111111', Reservado: '#e6bb08', Expirado: '#d4d4d4', 'En espera': '#9a9a9a', Cancelado: '#8a8378',
 };
 
-function estadoClase(estado: string): string {
-  if (estado === 'Confirmado' || estado === 'Abierto') return 'bg-[#fdf3c9] text-[#7a6200]';
-  if (estado === 'Reservado' || estado === 'En espera') return 'bg-[#f1f1ef] text-[#555]';
-  return 'bg-[#eceae4] text-[#8a8378]';
-}
+// function estadoClase(estado: string): string {
+//   if (estado === 'Confirmado' || estado === 'Abierto') return 'bg-[#fdf3c9] text-[#7a6200]';
+//   if (estado === 'Reservado' || estado === 'En espera') return 'bg-[#f1f1ef] text-[#555]';
+//   return 'bg-[#eceae4] text-[#8a8378]';
+// }
+
+
 
 function detalleEventos(cursos: number, catas: number): string {
   const partes: string[] = [];
@@ -107,7 +112,9 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
       {/* Sidebar */}
       <div className={`fixed inset-y-0 start-0 z-40 flex w-64 flex-col justify-between overflow-y-auto border-e border-[#e5e5e5] bg-white transition-transform duration-300 lg:static lg:shrink-0 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-4">
-          <span className="grid h-12 place-content-center rounded-lg bg-[#111111] text-sm font-bold tracking-[0.18em] uppercase text-white">Café Cabra</span>
+            <span className="grid h-14 place-content-center rounded-lg bg-[#111111] px-3">
+            <img src="/images/cafe-cabra-escuela-blanco.png" alt="Café Cabra Escuela" className="h-8 w-auto object-contain" />
+          </span>
           <nav aria-label="Panel" className="mt-4">
             <ul className="space-y-1">
               {NAV.map(item => (
@@ -115,12 +122,13 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
                   <button
                     type="button"
                     onClick={() => { setActive(item.key); setSidebarOpen(false); }}
-                    className={`block w-full text-left rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                    className={`flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm font-medium transition-colors ${
                       active === item.key
                         ? 'border-s-2 border-[#e6bb08] bg-[#f5f5f4] text-[#111111]'
                         : 'text-[#6b6b6b] hover:bg-[#f5f5f4] hover:text-[#111111]'
                     }`}
                   >
+                    <item.Icon className="size-4 shrink-0" />
                     {item.label}
                   </button>
                 </li>
@@ -138,7 +146,12 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
               <span className="block truncate text-[#6b6b6b]">{email ?? ''}</span>
             </p>
           </div>
-          <Link to="/" className="block border-t border-[#e5e5e5] p-4 text-xs text-[#6b6b6b] hover:bg-[#f5f5f4]">← Volver al sitio</Link>
+                    <Link to="/" className="block border-t border-[#e5e5e5] p-4 text-xs text-[#6b6b6b] hover:bg-[#f5f5f4]">← Volver al sitio</Link>
+          {onLogout && (
+            <button type="button" onClick={onLogout} className="block w-full border-t border-[#e5e5e5] p-4 text-left text-xs font-medium text-[#6b6b6b] hover:bg-[#f5f5f4]">
+              Cerrar sesión
+            </button>
+          )}
         </div>
       </div>
 
@@ -194,13 +207,7 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
                 </div>
               )}
             </div>
-
             <span className="hidden sm:inline text-sm text-[#6b6b6b]">{email ?? 'Administrador'}</span>
-            {onLogout && (
-              <button type="button" onClick={onLogout} className="rounded-md bg-[#111111] px-4 py-2 text-sm font-medium text-white transition hover:bg-black">
-                Cerrar sesión
-              </button>
-            )}
           </div>
         </header>
 
@@ -265,8 +272,7 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
                       <td className="px-3 py-2 whitespace-nowrap font-medium text-[#111111]">{row.alumno}</td>
                       <td className="px-3 py-2 whitespace-nowrap text-[#6b6b6b]">{row.evento}</td>
                       <td className="px-3 py-2 whitespace-nowrap">
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${estadoClase(row.estado)}`}>{row.estado}</span>
-                      </td>
+                        <EstadoBadge estado={row.estado} /></td>
                       <td className="px-3 py-2 whitespace-nowrap text-[#6b6b6b]">{formatFechaInscripcion(row.creadoEn)}</td>
                     </tr>
                   ))}

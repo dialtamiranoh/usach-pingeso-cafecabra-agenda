@@ -8,6 +8,9 @@ import { ReservationSummary } from '../features/booking/ReservationSummary';
 import { DietaryFields, InstagramField, TransferFields } from '../features/booking/EnrollmentExtraFields';
 import { dietaryLabel } from '../features/booking/enrollment-options';
 import type { EnrollmentReceipt, FreeEnrollmentRequest, PaidEnrollmentRequest } from '@cafecabra/shared';
+import { FaArrowRightLong } from 'react-icons/fa6';
+import { EstadoBadge } from '../components/EstadoBadge';
+import { ActionButton } from '../components/ActionButton';
 
 const clpFormat = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
 function formatDeadline(epoch: number): string {

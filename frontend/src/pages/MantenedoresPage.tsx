@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
+import { FaArrowRightLong } from 'react-icons/fa6';
+import { EstadoBadge } from '../components/EstadoBadge';
+import { ActionButton } from '../components/ActionButton';
+
 import {
   MANTENEDORES, type TipoMantenedor, type Registro,
   listarMantenedor, crearMantenedor, actualizarMantenedor,
@@ -100,9 +104,7 @@ export function MantenedoresPage() {
 
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-medium text-[#111111]">{def.titulo}</h2>
-        <button type="button" onClick={abrirNuevo} className="rounded-md bg-[#111111] px-4 py-2 text-sm font-medium text-white transition hover:bg-black">
-          Nueva {def.singular}
-        </button>
+        <ActionButton variant="crear" label={`Nueva ${def.singular}`} onClick={abrirNuevo} />
       </div>
 
       {formAbierto && (
@@ -135,12 +137,8 @@ export function MantenedoresPage() {
           ))}
           {errorForm && <p className="text-sm text-[#b3261e]" role="alert">{errorForm}</p>}
           <div className="flex gap-2">
-            <button type="submit" disabled={guardando} className="rounded-md bg-[#111111] px-4 py-2 text-sm font-medium text-white transition hover:bg-black disabled:opacity-60">
-              {guardando ? 'Guardando...' : 'Guardar'}
-            </button>
-            <button type="button" onClick={() => setFormAbierto(false)} className="rounded-md border border-[#d4d4d4] px-4 py-2 text-sm font-medium text-[#111111] transition hover:bg-[#f5f5f4]">
-              Cancelar
-            </button>
+            <ActionButton variant="guardar" type="submit" loading={guardando} />
+            <ActionButton variant="cancelar" onClick={() => setFormAbierto(false)} />
           </div>
         </form>
       )}
@@ -169,16 +167,12 @@ export function MantenedoresPage() {
                       </td>
                     ))}
                     <td className="px-3 py-2 whitespace-nowrap">
-                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${row.activo ? 'bg-[#fdf3c9] text-[#7a6200]' : 'bg-[#eceae4] text-[#8a8378]'}`}>
-                        {row.activo ? 'Activo' : 'Inactivo'}
-                      </span>
+                      <EstadoBadge estado={row.activo ? 'Activo' : 'Inactivo'} />
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap">
                       <div className="flex gap-3">
-                        <button type="button" onClick={() => abrirEdicion(row)} className="text-xs font-semibold text-[#111111] hover:underline">Editar</button>
-                        <button type="button" onClick={() => alternarActivo(row)} className="text-xs font-semibold text-[#6b6b6b] hover:underline">
-                          {row.activo ? 'Desactivar' : 'Activar'}
-                        </button>
+                        <ActionButton variant="editar" size="sm" onClick={() => abrirEdicion(row)} />
+                        <ActionButton variant={row.activo ? 'desactivar' : 'activar'} size="sm" onClick={() => alternarActivo(row)} />
                       </div>
                     </td>
                   </tr>

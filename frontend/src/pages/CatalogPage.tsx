@@ -2,6 +2,10 @@ import { useNavigate } from 'react-router-dom';
 import type { CatalogItem } from '../features/catalog/catalog-data';
 import { HeroVideo } from '../components/HeroVideo';
 import { CourseCard } from '../features/catalog/CourseCard';
+import { FaArrowRightLong } from 'react-icons/fa6';
+import { EstadoBadge } from '../components/EstadoBadge';
+import { ActionButton } from '../components/ActionButton';
+
 export function CatalogPage({ items: catalogItems, loading, error, retry }: { items: CatalogItem[]; loading: boolean; error: string; retry: () => void }) {
   const navigate = useNavigate();
   return (

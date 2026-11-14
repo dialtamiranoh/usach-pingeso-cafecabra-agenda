@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { formatSessionDate, type BookingSession } from './booking-data';
+import { FaArrowRightLong } from 'react-icons/fa6';
+import { EstadoBadge } from '../../components/EstadoBadge';
+import { ActionButton } from '../../components/ActionButton';
 
 export function SessionCalendar({ sessions, selectedDate, selectedDates = [selectedDate], onSelectDate }: {
   sessions: BookingSession[];

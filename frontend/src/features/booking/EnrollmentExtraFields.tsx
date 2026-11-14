@@ -3,6 +3,9 @@ import type { EnrollmentDraft } from './booking-data';
 import { InstitucionSelect } from './InstitucionSelect';
 import { dietaryOptions } from './enrollment-options';
 import { TIPOS_CUENTA } from '@cafecabra/shared';
+import { FaArrowRightLong } from 'react-icons/fa6';
+import { EstadoBadge } from '../../components/EstadoBadge';
+import { ActionButton } from '../../components/ActionButton';
 
 interface ExtraFieldsProps {
   draft: EnrollmentDraft;

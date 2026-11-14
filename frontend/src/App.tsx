@@ -7,6 +7,7 @@ import { AvailabilityPage } from './pages/AvailabilityPage';
 import { EnrollmentPage } from './pages/EnrollmentPage';
 import type { CatalogItem } from './features/catalog/catalog-data';
 import { useCatalog } from './features/catalog/useCatalog';
+
 import { emptyDraft, validatePersonalDetails, type EnrollmentDraft } from './features/booking/booking-data';
 //import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminGate } from './pages/AdminGate';

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { heroImage } from '../features/catalog/catalog-data';
+import { EstadoBadge } from '../components/EstadoBadge';
+import { ActionButton } from '../components/ActionButton';
 
 export function HeroVideo() {
   const video = useRef<HTMLVideoElement>(null);

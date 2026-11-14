@@ -1,6 +1,11 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { FaInstagram, FaMugHot } from 'react-icons/fa6';
 import { BrandLogo } from './BrandLogo';
+import { EstadoBadge } from '../components/EstadoBadge';
+import { ActionButton } from '../components/ActionButton';
+
+
 export function SiteLayout({children}:{children:ReactNode}) {
   return (
     <>
@@ -15,9 +20,8 @@ export function SiteLayout({children}:{children:ReactNode}) {
       <footer className="site-footer">
         <div className="container footer-inner">
           <div><Link className="brand-link" to="/" aria-label="Café Cabra, inicio"><BrandLogo /></Link><p>Café de especialidad. Aprendizaje compartido.</p></div>
-          <div className="footer-links"><a href="https://cafecabra.cl" target="_blank" rel="noreferrer">Visita nuestra cafetería ↗</a><a href="https://www.instagram.com/cafecabra/" target="_blank" rel="noreferrer">Instagram ↗</a></div>
+                    <div className="footer-links"><a href="https://cafecabra.cl" target="_blank" rel="noreferrer"><FaMugHot aria-hidden="true" style={{ verticalAlign: '-0.125em' }} /> Visita nuestra cafetería</a><a href="https://www.instagram.com/cafecabra/" target="_blank" rel="noreferrer"><FaInstagram aria-hidden="true" style={{ verticalAlign: '-0.125em' }} /> Instagram</a></div>
         </div>
-        <div className="container footer-bottom">Café Cabra · Cursos y experiencias</div>
       </footer>
     </>
   );

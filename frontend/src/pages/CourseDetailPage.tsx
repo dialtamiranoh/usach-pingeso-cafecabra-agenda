@@ -2,6 +2,9 @@ import { Link } from 'react-router-dom';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { ImageGallery } from '../components/ImageGallery';
 import { formatPrice, type CatalogItem } from '../features/catalog/catalog-data';
+import { FaArrowRightLong } from 'react-icons/fa6';
+import { EstadoBadge } from '../components/EstadoBadge';
+import { ActionButton } from '../components/ActionButton';
 
 export function CourseDetailPage({ course }: { course: CatalogItem }) {
   return (

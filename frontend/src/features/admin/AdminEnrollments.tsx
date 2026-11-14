@@ -2,6 +2,10 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { AdminEnrollmentDetail, AdminEnrollmentList, ReservationStatus } from '@cafecabra/shared';
 import { formatMonto } from './useAdminPanel';
 import { formatSessionDate } from '../booking/booking-data';
+import { FaArrowRightLong } from 'react-icons/fa6';
+import { EstadoBadge } from '../../components/EstadoBadge';
+import { ActionButton } from '../../components/ActionButton';
+
 
 const LABELS: Record<ReservationStatus, string> = { RESERVADO: 'Pendiente de pago', CONFIRMADO: 'Confirmada', CANCELADO: 'Cancelada', EXPIRADO: 'Expirada', EN_ESPERA: 'En espera' };
 const NOTICES = { PENDIENTE: 'Pendiente de envío', ENVIANDO: 'En proceso de envío', ENVIADO: 'Aceptada por el servicio de correo', ERROR: 'Error de envío' };

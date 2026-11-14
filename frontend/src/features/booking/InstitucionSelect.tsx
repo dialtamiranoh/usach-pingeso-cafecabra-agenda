@@ -1,5 +1,8 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { INSTITUCIONES_FINANCIERAS, type TipoInstitucionFinanciera } from '@cafecabra/shared';
+import { FaArrowRightLong } from 'react-icons/fa6';
+import { EstadoBadge } from '../../components/EstadoBadge';
+import { ActionButton } from '../../components/ActionButton';
 
 // SCRUM-91: lista desplegable propia para el campo "Banco de origen".
 //

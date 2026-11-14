@@ -6,6 +6,10 @@ import type { CatalogItem } from '../features/catalog/catalog-data';
 import { formatSessionDate } from '../features/booking/booking-data';
 import { SessionCalendar } from '../features/booking/SessionCalendar';
 import { ReservationSummary } from '../features/booking/ReservationSummary';
+import { FaArrowRightLong } from 'react-icons/fa6';
+import { EstadoBadge } from '../components/EstadoBadge';
+import { ActionButton } from '../components/ActionButton';
+
 
 export function AvailabilityPage({ course }: { course: CatalogItem }) {
   const [params, setParams] = useSearchParams();
