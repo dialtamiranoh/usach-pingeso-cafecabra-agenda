@@ -28,7 +28,7 @@ export function AdminLoginPage({ onLoggedIn }: { onLoggedIn: () => void }) {
         className="mx-auto w-full max-w-md space-y-4 rounded-lg border border-[#e5e5e5] bg-white p-6"
       >
         <div className="text-center">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-[#9a9a9a]">Café Cabra</p>
+          <img src="/images/cafe-cabra-escuela-negro.png" alt="Café Cabra Escuela" className="mx-auto h-14 w-auto" />
           <h1 className="mt-1 text-xl font-bold text-[#111111]">Panel de administración</h1>
           <p className="mt-1 text-sm text-[#6b6b6b]">Ingresa con tu cuenta de administrador.</p>
         </div>
