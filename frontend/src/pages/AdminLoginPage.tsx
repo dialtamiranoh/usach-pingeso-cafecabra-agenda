@@ -25,11 +25,15 @@ export function AdminLoginPage({ onLoggedIn }: { onLoggedIn: () => void }) {
     <div className="min-h-screen grid place-items-center bg-[#f5f5f4] font-sans p-6">
       <form
         onSubmit={onSubmit}
-        className="mx-auto w-full max-w-md space-y-4 rounded-lg border border-[#e5e5e5] bg-white p-6"
+        className="mx-auto w-full max-w-md space-y-4 rounded-lg border border-[#e5e5e5] bg-white px-6 pb-6 pt-8"
       >
         <div className="text-center">
-              <img src="/images/cafe-cabra-escuela-negro.png" alt="Café Cabra Escuela" className="mx-auto h-12 w-auto max-w-[220px] object-contain" />
-          <h1 className="mt-1 text-xl font-bold text-[#111111]">Panel de administración</h1>
+          <img
+            src="/images/cafe-cabra-escuela-negro.png"
+            alt="Café Cabra Escuela"
+            className="mx-auto mb-3 h-14 w-auto max-w-[240px] object-contain"
+          />
+          <h1 className="text-xl font-bold text-[#111111]">Panel de administración</h1>
           <p className="mt-1 text-sm text-[#6b6b6b]">Ingresa con tu cuenta de administrador.</p>
         </div>
 
