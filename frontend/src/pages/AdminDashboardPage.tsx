@@ -1,4 +1,5 @@
-import { AdminEnrollments } from '../features/admin/AdminEnrollments';
+import { createPortal } from 'react-dom';
+mport { AdminEnrollments } from '../features/admin/AdminEnrollments';
 import { useRealtime } from '../features/admin/useRealtime';
 import { EstadoBadge } from '../components/EstadoBadge';
 
@@ -279,10 +280,9 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
         </main>
       </div>
 
-      {toast && (
-        <div className="fixed bottom-4 end-4 z-50 max-w-xs rounded-lg border border-[#e5e5e5] bg-white px-4 py-3 shadow-lg">
-          <p className="text-sm font-medium text-[#111111]">{toast}</p>
-        </div>
+      {toast && createPortal(
+        <div className="toast-aviso" role="status">{toast}</div>,
+        document.body,
       )}
     </div>
   );
