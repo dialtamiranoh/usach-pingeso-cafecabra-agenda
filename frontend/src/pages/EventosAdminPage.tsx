@@ -160,8 +160,11 @@ export function EventosAdminPage({ onChanged }: { onChanged?: () => void } = {})
   const [errorForm, setErrorForm] = useState('');
 
   // Cierre manual con confirmación en la misma fila del listado o en el detalle del evento,
-  // sin ventanas emergentes del navegador.
+  // sin ventanas emergentes del navegador. Cada lugar tiene su propio estado de confirmación,
+  // ya que, al compartir uno solo la pregunta aparecía al mismo tiempo en la fila del listado
+  // y en el detalle del evento que se estaba editando.
   const [cierrePendiente, setCierrePendiente] = useState<number | null>(null);
+  const [cierreDetallePendiente, setCierreDetallePendiente] = useState(false);
   const [mensaje, setMensaje] = useState('');
 
   const cargar = useCallback(async () => {
@@ -237,6 +240,7 @@ export function EventosAdminPage({ onChanged }: { onChanged?: () => void } = {})
       setEditId(id);
       setEstadoEditado(evento.estado);
       setCierrePendiente(null);
+      setCierreDetallePendiente(false);
       setFormAbierto(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo cargar el evento.');
@@ -279,6 +283,7 @@ export function EventosAdminPage({ onChanged }: { onChanged?: () => void } = {})
       setError(e instanceof Error ? e.message : 'No se pudo cerrar el evento.');
     } finally {
       setCierrePendiente(null);
+      setCierreDetallePendiente(false);
     }
   }
 
@@ -413,7 +418,7 @@ export function EventosAdminPage({ onChanged }: { onChanged?: () => void } = {})
                         value={edicion.cupo} onChange={e => actualizarEdicion(indiceEdicion, { cupo: e.target.value })}
                         className="mt-1 w-36 rounded-lg border border-[#d4d4d4] bg-white px-3 py-1.5 text-sm focus:border-[#111111] focus:outline-none" />
                     </div>
-                    <ActionButton variant="eliminar" size="sm" label="Quitar edición"
+                    <ActionButton type="button" variant="eliminar" size="sm" label="Quitar edición"
                       disabled={form.ediciones.length === 1 || edicion.tieneReservas}
                       title={edicion.tieneReservas ? 'La edición tiene reservas asociadas' : undefined}
                       onClick={() => setForm(previo => ({ ...previo, ediciones: previo.ediciones.filter((_, i) => i !== indiceEdicion) }))} />
@@ -440,30 +445,35 @@ export function EventosAdminPage({ onChanged }: { onChanged?: () => void } = {})
                         onChange={e => actualizarJornada(indiceEdicion, indiceJornada, { fin: e.target.value })}
                         className="mt-1 rounded-lg border border-[#d4d4d4] bg-white px-3 py-1.5 text-sm focus:border-[#111111] focus:outline-none" />
                     </div>
-                    <ActionButton variant="cancelar" size="sm" label="Quitar jornada" disabled={edicion.jornadas.length === 1}
+                    <ActionButton type="button" variant="cancelar" size="sm" label="Quitar jornada" disabled={edicion.jornadas.length === 1}
                       onClick={() => actualizarEdicion(indiceEdicion, { jornadas: edicion.jornadas.filter((_, k) => k !== indiceJornada) })} />
                   </div>
                 ))}
-                <ActionButton variant="crear" size="sm" label="Agregar jornada"
+                <ActionButton type="button" variant="crear" size="sm" label="Agregar jornada"
                   onClick={() => actualizarEdicion(indiceEdicion, { jornadas: [...edicion.jornadas, { ...JORNADA_VACIA }] })} />
               </div>
             ))}
-            <ActionButton variant="crear" label="Agregar edición" onClick={() => setForm(previo => ({ ...previo, ediciones: [...previo.ediciones, nuevaEdicion()] }))} />
+            <ActionButton type="button" variant="crear" label="Agregar edición" onClick={() => setForm(previo => ({ ...previo, ediciones: [...previo.ediciones, nuevaEdicion()] }))} />
           </div>
 
           {errorForm && <p className="text-sm text-[#b3261e]" role="alert">{errorForm}</p>}
+          {/* Dentro de un formulario el navegador trata como envío a todo botón que no declara su
+              tipo, y ActionButton no lo define por defecto, por lo que cada botón que no debe guardar
+              el evento lleva type="button". Sin esto, Agregar jornada o Cerrar evento también enviaban
+              el formulario, lo que guardaba el evento antes de tiempo o lo dejaba otra vez en ABIERTO
+              después del cierre (INC-01 de SCRUM-102). */}
           <div className="flex flex-wrap items-center gap-2">
             <ActionButton variant="guardar" type="submit" loading={guardando} />
-            <ActionButton variant="cancelar" onClick={() => setFormAbierto(false)} />
+            <ActionButton type="button" variant="cancelar" onClick={() => setFormAbierto(false)} />
             {/* Cierre manual desde el detalle del evento, según los criterios de aceptación de SCRUM-25. */}
-            {editId !== null && estadoEditado === 'ABIERTO' && (cierrePendiente === editId ? (
+            {editId !== null && estadoEditado === 'ABIERTO' && (cierreDetallePendiente ? (
               <span className="ms-auto flex items-center gap-2">
                 <span className="text-xs text-[#6b6b6b]">¿Cerrar inscripciones?</span>
-                <ActionButton variant="desactivar" size="sm" label="Sí, cerrar" onClick={() => confirmarCierre(editId)} />
-                <ActionButton variant="cancelar" size="sm" label="No" onClick={() => setCierrePendiente(null)} />
+                <ActionButton type="button" variant="desactivar" size="sm" label="Sí, cerrar" onClick={() => confirmarCierre(editId)} />
+                <ActionButton type="button" variant="cancelar" size="sm" label="No" onClick={() => setCierreDetallePendiente(false)} />
               </span>
             ) : (
-              <ActionButton variant="desactivar" label="Cerrar evento" className="ms-auto" onClick={() => setCierrePendiente(editId)} />
+              <ActionButton type="button" variant="desactivar" label="Cerrar evento" className="ms-auto" onClick={() => setCierreDetallePendiente(true)} />
             ))}
           </div>
         </form>
