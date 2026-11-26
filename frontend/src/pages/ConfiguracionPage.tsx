@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { TIPOS_CUENTA } from '@cafecabra/shared';
 import { GRUPOS_CONFIG, leerConfiguracion, guardarConfiguracion } from '../features/admin/configuracion';
+import { InstitucionSelect } from '../features/booking/InstitucionSelect';
 import { ActionButton } from '../components/ActionButton';
 import { EstadoBadge } from '../components/EstadoBadge';
 
@@ -61,18 +63,34 @@ export function ConfiguracionPage() {
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {grupo.campos.map(campo => (
                   <div key={campo.clave}>
-                    <label className="block text-sm font-medium text-[#111111]" htmlFor={campo.clave}>{campo.label}</label>
-                    <input
-                      id={campo.clave}
-                      className={CAMPO}
-                      type={campo.tipo === 'email' ? 'email' : campo.tipo === 'numero' ? 'number' : 'text'}
-                      inputMode={campo.tipo === 'numero' ? 'numeric' : undefined}
-                      min={campo.tipo === 'numero' ? 1 : undefined}
-                      max={campo.tipo === 'numero' ? 168 : undefined}
-                      value={valores[campo.clave] ?? ''}
-                      placeholder={campo.placeholder}
-                      onChange={e => set(campo.clave, e.target.value)}
-                    />
+                    {campo.tipo === 'banco' ? (
+                      // Mismo combobox de bancos que usa la inscripción con pago (InstitucionSelect).
+                      <InstitucionSelect id={campo.clave} label={campo.label} value={valores[campo.clave] ?? ''} onChange={v => set(campo.clave, v)} />
+                    ) : campo.tipo === 'tipoCuenta' ? (
+                      // Mismo catálogo de tipos de cuenta que usa la inscripción con pago (TIPOS_CUENTA).
+                      <>
+                        <label className="block text-sm font-medium text-[#111111]" htmlFor={campo.clave}>{campo.label}</label>
+                        <select id={campo.clave} className={CAMPO} value={valores[campo.clave] ?? ''} onChange={e => set(campo.clave, e.target.value)}>
+                          <option value="">Selecciona una opción</option>
+                          {TIPOS_CUENTA.map(tipo => <option key={tipo.nombre} value={tipo.nombre}>{tipo.nombre}</option>)}
+                        </select>
+                      </>
+                    ) : (
+                      <>
+                        <label className="block text-sm font-medium text-[#111111]" htmlFor={campo.clave}>{campo.label}</label>
+                        <input
+                          id={campo.clave}
+                          className={CAMPO}
+                          type={campo.tipo === 'email' ? 'email' : campo.tipo === 'numero' ? 'number' : 'text'}
+                          inputMode={campo.tipo === 'numero' ? 'numeric' : undefined}
+                          min={campo.tipo === 'numero' ? 1 : undefined}
+                          max={campo.tipo === 'numero' ? 168 : undefined}
+                          value={valores[campo.clave] ?? ''}
+                          placeholder={campo.placeholder}
+                          onChange={e => set(campo.clave, e.target.value)}
+                        />
+                      </>
+                    )}
                     {campo.ayuda && <p className="mt-1 text-xs text-[#9a9a9a]">{campo.ayuda}</p>}
                   </div>
                 ))}

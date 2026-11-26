@@ -4,7 +4,7 @@
 export interface CampoConfig {
   clave: string;
   label: string;
-  tipo: 'text' | 'email' | 'numero';
+  tipo: 'text' | 'email' | 'numero' | 'banco' | 'tipoCuenta';
   ayuda?: string;
   placeholder?: string;
 }
@@ -22,8 +22,8 @@ export const GRUPOS_CONFIG: GrupoConfig[] = [
     campos: [
       { clave: 'pago:titular', label: 'Titular de la cuenta', tipo: 'text', placeholder: 'CAFE CABRA SpA' },
       { clave: 'pago:rut', label: 'RUT del titular', tipo: 'text', placeholder: '77.144.117-3' },
-      { clave: 'pago:banco', label: 'Banco', tipo: 'text', placeholder: 'SumUp' },
-      { clave: 'pago:tipo_cuenta', label: 'Tipo de cuenta', tipo: 'text', placeholder: 'Cuenta Vista' },
+      { clave: 'pago:banco', label: 'Banco', tipo: 'banco' },
+      { clave: 'pago:tipo_cuenta', label: 'Tipo de cuenta', tipo: 'tipoCuenta' },
       { clave: 'pago:numero_cuenta', label: 'Número de cuenta', tipo: 'text', placeholder: '1188100117' },
       { clave: 'pago:correo_notificacion', label: 'Correo para el aviso de transferencia', tipo: 'email', placeholder: 'pagos@cafecabra.cl' },
     ],
