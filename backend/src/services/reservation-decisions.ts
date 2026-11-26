@@ -1,4 +1,5 @@
 import { loadEditions } from './editions';
+import { asunto } from '../integrations/email/plantilla';
 import type { AdminEnrollment, AdminEnrollmentDetail, ReservationStatus } from '@cafecabra/shared';
 
 export class DecisionError extends Error {
@@ -102,8 +103,8 @@ export async function decideReservation(db: D1Database, id: number, actor: strin
   const confirm = input.action === 'CONFIRMAR';
   if (confirm ? !before.canConfirm : !before.canCancel) throw new DecisionError('La reserva cambió de estado, venció o ya fue revisada. Actualiza el detalle.');
   const target: ReservationStatus = confirm ? 'CONFIRMADO' : 'CANCELADO';
-  const subject = `${confirm ? 'Inscripción confirmada' : 'Reserva cancelada'} — ${before.event} | Café Cabra`;
-  const dateLines = before.dates.map(day => `${new Intl.DateTimeFormat('es-CL', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${day.date}T12:00:00Z`))} · ${day.schedule ?? 'Horario por confirmar'}`).join('\n');
+  const subject = asunto(`${confirm ? 'Inscripción confirmada' : 'Reserva cancelada'}: ${before.event}`);
+  const dateLines = before.dates.map(day => `${new Intl.DateTimeFormat('es-CL', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${day.date}T12:00:00Z`))} - ${day.schedule ?? 'Horario por confirmar'}`).join('\n');
   const message = `Hola ${before.attendee},\n\n${confirm ? `Tu pago fue validado y tu inscripción en ${before.event} está confirmada.` : `Tu reserva para ${before.event} fue cancelada.\nMotivo: ${reason}`}\n\n${dateLines ? `Fechas de tu inscripción:\n${dateLines}\n\n` : ''}Código de reserva: ${before.code}\n${confirm ? '¡Te esperamos!' : 'Si necesitas aclarar esta decisión, comunícate con Café Cabra.'}\n\nCafé Cabra Escuela`;
   // La primera sentencia valida vigencia bajo el mismo bloqueo de escritura que la
   // decisión, el cambio de estado y el correo. El cron y dos pestañas no pueden ganar a la vez.
