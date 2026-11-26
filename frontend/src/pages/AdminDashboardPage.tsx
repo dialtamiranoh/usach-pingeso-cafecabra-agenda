@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom';
-mport { AdminEnrollments } from '../features/admin/AdminEnrollments';
+import { AdminEnrollments } from '../features/admin/AdminEnrollments';
 import { useRealtime } from '../features/admin/useRealtime';
 import { EstadoBadge } from '../components/EstadoBadge';
 
