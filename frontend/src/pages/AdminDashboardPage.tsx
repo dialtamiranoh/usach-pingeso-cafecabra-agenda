@@ -2,6 +2,7 @@ import { createPortal } from 'react-dom';
 import { AdminEnrollments } from '../features/admin/AdminEnrollments';
 import { useRealtime } from '../features/admin/useRealtime';
 import { EstadoBadge } from '../components/EstadoBadge';
+import { ConfiguracionPage } from './ConfiguracionPage';
 
 interface Notificacion { id: number; texto: string; ts: number; }
 
@@ -207,7 +208,7 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
         </header>
 
         <main className="flex-1 space-y-6 p-6">
-          {active === 'mantenedores' ? <MantenedoresPage /> : active === 'eventos' ? <EventosAdminPage onChanged={retry} /> : active === 'inscritos' ? <AdminEnrollments refreshKey={inscritosVersion} onChanged={retry} /> : <>
+          {active === 'mantenedores' ? <MantenedoresPage /> : active === 'configuracion' ? <ConfiguracionPage /> : active === 'eventos' ? <EventosAdminPage onChanged={retry} /> : active === 'inscritos' ? <AdminEnrollments refreshKey={inscritosVersion} onChanged={retry} /> : <>
           {loading && <p className="text-sm text-[#6b6b6b]">Cargando panel...</p>}
 
           {error && !loading && (

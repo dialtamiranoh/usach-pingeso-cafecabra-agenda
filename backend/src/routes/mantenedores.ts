@@ -3,7 +3,8 @@ import { eq } from 'drizzle-orm';
 import type { AppBindings } from '../config/bindings';
 import { createDb } from '../db';
 import { createAuth } from '../auth';
-import { ubicaciones, tipoEvento, instructores, opcionesAlimentarias } from '../db/schema';
+import { ubicaciones, tipoEvento, instructores, opcionesAlimentarias, configuracion } from '../db/schema';
+
 
 // CRUD de mantenedores (RF-31): ubicaciones, instructores y opciones alimentarias. Baja
 // lógica (activo=false), nunca borrado físico, y auditoría del último operador (RF-34).
@@ -138,4 +139,66 @@ mantenedorRoutes.patch('/admin/mantenedores/opciones/:id', async c => {
   const [fila] = await db.update(opcionesAlimentarias).set(cambios).where(eq(opcionesAlimentarias.id, id)).returning();
   if (!fila) return c.json({ error: 'No encontrado.' }, 404);
   return c.json({ id: fila.id, nombre: fila.nombre, activo: fila.activo });
+});
+
+/* ───────── Configuración de negocio (RN-29: cuenta de transferencia, vencimiento, correos) ───────── */
+
+// Claves editables desde el panel. 'entorno' queda fuera: es de solo lectura.
+const CONFIG_EDITABLES = [
+  'pago:titular', 'pago:rut', 'pago:banco', 'pago:tipo_cuenta', 'pago:numero_cuenta',
+  'pago:correo_notificacion', 'pago:plazo_horas', 'notificaciones:admin_email',
+] as const;
+const CONFIG_CLAVES: readonly string[] = [...CONFIG_EDITABLES, 'entorno'];
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Valida una clave antes de escribirla. Devuelve el mensaje de error, o null si es válida.
+function validarConfig(clave: string, valor: string): string | null {
+  if (clave === 'pago:plazo_horas') {
+    const n = Number(valor);
+    if (!Number.isInteger(n) || n < 1 || n > 168) return 'El plazo debe ser un entero de horas entre 1 y 168.';
+    return null;
+  }
+  if (clave === 'pago:correo_notificacion' || clave === 'notificaciones:admin_email') {
+    return EMAIL_RE.test(valor) ? null : 'El correo no tiene un formato válido.';
+  }
+  return valor.length >= 1 ? null : 'El valor es obligatorio.';
+}
+
+// Lee el conjunto de claves conocidas y rellena las editables que falten con cadena vacía.
+async function leerConfig(db: ReturnType<typeof createDb>, appEnv: string) {
+  const filas = await db.select({ clave: configuracion.clave, valor: configuracion.valor }).from(configuracion);
+  const mapa: Record<string, string> = {};
+  for (const f of filas) if (CONFIG_CLAVES.includes(f.clave)) mapa[f.clave] = f.valor ?? '';
+  for (const clave of CONFIG_EDITABLES) if (!(clave in mapa)) mapa[clave] = '';
+  return { valores: mapa, entorno: mapa['entorno'] ?? appEnv };
+}
+
+mantenedorRoutes.get('/admin/mantenedores/configuracion', async c => {
+  const db = createDb(c.env.cafe_cabra_agenda_db);
+  return c.json(await leerConfig(db, c.env.APP_ENV));
+});
+
+mantenedorRoutes.patch('/admin/mantenedores/configuracion', async c => {
+  const db = createDb(c.env.cafe_cabra_agenda_db);
+  const b = await c.req.json().catch(() => null);
+  const entrada = (b && typeof b === 'object' && b.valores && typeof b.valores === 'object') ? b.valores as Record<string, unknown> : null;
+  if (!entrada) return c.json({ error: 'Formato inválido.' }, 400);
+
+  // Solo claves de la lista blanca; valida cada una antes de escribir nada.
+  const cambios: { clave: string; valor: string }[] = [];
+  for (const clave of CONFIG_EDITABLES) {
+    if (!(clave in entrada)) continue;
+    const valor = texto(entrada[clave]);
+    const error = validarConfig(clave, valor);
+    if (error) return c.json({ error: `${clave}: ${error}` }, 400);
+    cambios.push({ clave, valor });
+  }
+  if (!cambios.length) return c.json({ error: 'No hay cambios para guardar.' }, 400);
+
+  const marca = audit(c);
+  for (const { clave, valor } of cambios) {
+    await db.insert(configuracion).values({ clave, valor, ...marca })
+      .onConflictDoUpdate({ target: configuracion.clave, set: { valor, ...marca } });
+  }
+  return c.json(await leerConfig(db, c.env.APP_ENV));
 });
