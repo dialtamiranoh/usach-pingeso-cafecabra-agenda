@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react';
-import { TIPOS_CUENTA } from '@cafecabra/shared';
+import { TIPOS_CUENTA, INSTITUCIONES_FINANCIERAS, type TipoInstitucionFinanciera } from '@cafecabra/shared';
 import { GRUPOS_CONFIG, leerConfiguracion, guardarConfiguracion } from '../features/admin/configuracion';
-import { InstitucionSelect } from '../features/booking/InstitucionSelect';
 import { ActionButton } from '../components/ActionButton';
 import { EstadoBadge } from '../components/EstadoBadge';
 
 const CAMPO = 'mt-1 w-full rounded-lg border border-[#d4d4d4] bg-white px-3 py-2 text-sm text-[#111111] focus:border-[#111111] focus:outline-none';
+
+// Mismos grupos de bancos que usa la inscripción con pago.
+const GRUPOS_BANCO: { tipo: TipoInstitucionFinanciera; etiqueta: string }[] = [
+  { tipo: 'BANCO', etiqueta: 'Bancos' },
+  { tipo: 'EMISOR_PREPAGO', etiqueta: 'Billeteras y prepago' },
+  { tipo: 'COOPERATIVA', etiqueta: 'Cooperativas' },
+];
 
 // Mantenedor de configuración de negocio: cuenta de transferencia, vencimiento de
 // solicitudes y correo de notificación. Un solo formulario, guardado atómico.
@@ -63,33 +69,37 @@ export function ConfiguracionPage() {
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {grupo.campos.map(campo => (
                   <div key={campo.clave}>
+                    <label className="block text-sm font-medium text-[#111111]" htmlFor={campo.clave}>{campo.label}</label>
                     {campo.tipo === 'banco' ? (
-                      // Mismo combobox de bancos que usa la inscripción con pago (InstitucionSelect).
-                      <InstitucionSelect id={campo.clave} label={campo.label} value={valores[campo.clave] ?? ''} onChange={v => set(campo.clave, v)} />
+                      // Mismo catálogo de bancos que la inscripción con pago (INSTITUCIONES_FINANCIERAS).
+                      <select id={campo.clave} className={CAMPO} value={valores[campo.clave] ?? ''} onChange={e => set(campo.clave, e.target.value)}>
+                        <option value="">Selecciona una opción</option>
+                        {GRUPOS_BANCO.map(grupoBanco => (
+                          <optgroup key={grupoBanco.tipo} label={grupoBanco.etiqueta}>
+                            {INSTITUCIONES_FINANCIERAS.filter(i => i.tipo === grupoBanco.tipo).map(i => (
+                              <option key={i.nombre} value={i.nombre}>{i.nombre}</option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
                     ) : campo.tipo === 'tipoCuenta' ? (
-                      // Mismo catálogo de tipos de cuenta que usa la inscripción con pago (TIPOS_CUENTA).
-                      <>
-                        <label className="block text-sm font-medium text-[#111111]" htmlFor={campo.clave}>{campo.label}</label>
-                        <select id={campo.clave} className={CAMPO} value={valores[campo.clave] ?? ''} onChange={e => set(campo.clave, e.target.value)}>
-                          <option value="">Selecciona una opción</option>
-                          {TIPOS_CUENTA.map(tipo => <option key={tipo.nombre} value={tipo.nombre}>{tipo.nombre}</option>)}
-                        </select>
-                      </>
+                      // Mismo catálogo de tipos de cuenta que la inscripción con pago (TIPOS_CUENTA).
+                      <select id={campo.clave} className={CAMPO} value={valores[campo.clave] ?? ''} onChange={e => set(campo.clave, e.target.value)}>
+                        <option value="">Selecciona una opción</option>
+                        {TIPOS_CUENTA.map(tipo => <option key={tipo.nombre} value={tipo.nombre}>{tipo.nombre}</option>)}
+                      </select>
                     ) : (
-                      <>
-                        <label className="block text-sm font-medium text-[#111111]" htmlFor={campo.clave}>{campo.label}</label>
-                        <input
-                          id={campo.clave}
-                          className={CAMPO}
-                          type={campo.tipo === 'email' ? 'email' : campo.tipo === 'numero' ? 'number' : 'text'}
-                          inputMode={campo.tipo === 'numero' ? 'numeric' : undefined}
-                          min={campo.tipo === 'numero' ? 1 : undefined}
-                          max={campo.tipo === 'numero' ? 168 : undefined}
-                          value={valores[campo.clave] ?? ''}
-                          placeholder={campo.placeholder}
-                          onChange={e => set(campo.clave, e.target.value)}
-                        />
-                      </>
+                      <input
+                        id={campo.clave}
+                        className={CAMPO}
+                        type={campo.tipo === 'email' ? 'email' : campo.tipo === 'numero' ? 'number' : 'text'}
+                        inputMode={campo.tipo === 'numero' ? 'numeric' : undefined}
+                        min={campo.tipo === 'numero' ? 1 : undefined}
+                        max={campo.tipo === 'numero' ? 168 : undefined}
+                        value={valores[campo.clave] ?? ''}
+                        placeholder={campo.placeholder}
+                        onChange={e => set(campo.clave, e.target.value)}
+                      />
                     )}
                     {campo.ayuda && <p className="mt-1 text-xs text-[#9a9a9a]">{campo.ayuda}</p>}
                   </div>
