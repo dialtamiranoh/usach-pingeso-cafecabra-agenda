@@ -147,7 +147,6 @@ export const instructores = sqliteTable("instructores", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   nombre: text("nombre").notNull(),
   bio: text("bio"),
-  fotoUrl: text("foto_url"),
   email: text("email"),
   activo: integer("activo", { mode: "boolean" }).notNull().default(true),
   actualizadoPor: text("actualizado_por").references(() => user.id),
@@ -243,12 +242,25 @@ export const eventoOpcionesAlimentarias = sqliteTable(
 
 // Carrusel de media del evento: imágenes y/o video (RN-30, RN-31). El
 // contenido audiovisual se almacena en R2; `url` apunta al objeto.
+export const bibliotecaImagenes = sqliteTable("biblioteca_imagenes", {
+  id: text("id").primaryKey(),
+  clave: text("clave").notNull().unique(),
+  nombre: text("nombre").notNull(),
+  peso: integer("peso").notNull(),
+  ancho: integer("ancho").notNull(),
+  alto: integer("alto").notNull(),
+  estado: text("estado", { enum: ["ACTIVA", "ELIMINANDO"] }).notNull().default("ACTIVA"),
+  creadoPor: text("creado_por").references(() => user.id),
+  creadoEn: integer("creado_en", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+});
+
 export const eventoMedia = sqliteTable("evento_media", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   eventoId: integer("evento_id")
     .notNull()
     .references(() => eventos.id, { onDelete: "cascade" }),
   url: text("url").notNull(),
+  imagenId: text("imagen_id").references(() => bibliotecaImagenes.id),
   // IMAGEN (default) o VIDEO. El catálogo admite varias fotos + un video.
   tipo: text("tipo", { enum: ["IMAGEN", "VIDEO"] }).notNull().default("IMAGEN"),
   orden: integer("orden").notNull().default(0),

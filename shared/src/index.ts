@@ -87,7 +87,6 @@ export interface Instructor {
   id: number;
   nombre: string;
   bio: string | null;
-  fotoUrl: string | null;
   email: string | null;
   activo: boolean;
 }

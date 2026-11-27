@@ -101,12 +101,12 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
   ] : [];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f5f5f4] text-[#111111] font-sans">
+    <div className="admin-layout flex h-dvh overflow-hidden bg-[#f5f5f4] text-[#111111] font-sans">
       {/* Overlay móvil */}
       {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} aria-hidden="true" />}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 start-0 z-40 flex w-64 flex-col justify-between overflow-y-auto border-e border-[#e5e5e5] bg-white transition-transform duration-300 lg:static lg:shrink-0 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed inset-y-0 start-0 z-40 flex w-64 max-w-[85vw] flex-col justify-between overflow-y-auto border-e border-[#e5e5e5] bg-white transition-transform duration-300 lg:static lg:shrink-0 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-4">
             <span className="grid h-14 place-content-center rounded-lg bg-[#111111] px-3">
             <img src="/images/cafe-cabra-escuela-blanco.png" alt="Café Cabra Escuela" className="h-8 w-auto object-contain" />
@@ -153,19 +153,20 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
 
       {/* Contenido */}
       <div className="flex flex-1 flex-col overflow-y-auto">
-        <header className="flex items-center justify-between border-b border-[#e5e5e5] bg-white px-6 py-4">
-          <div className="flex items-center gap-4">
+        <header className="flex min-w-0 items-center justify-between gap-2 border-b border-[#e5e5e5] bg-white px-4 py-3 sm:px-6 sm:py-4">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-4">
             <button
               type="button"
               onClick={() => setSidebarOpen(v => !v)}
               className="cursor-pointer rounded-md p-2 text-[#6b6b6b] transition-colors hover:bg-[#f5f5f4] lg:hidden"
               aria-label="Abrir menú"
+              aria-expanded={sidebarOpen}
             >
               <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="text-lg font-semibold text-[#111111]">{NAV.find(item => item.key === active)?.label ?? 'Panel'}</h1>
+            <h1 className="min-w-0 break-words text-lg font-semibold text-[#111111]">{NAV.find(item => item.key === active)?.label ?? 'Panel'}</h1>
           </div>
           <div className="flex items-center gap-3">
             {/* Campanita */}
@@ -186,7 +187,7 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
                 )}
               </button>
               {campanitaAbierta && (
-                <div className="absolute end-0 z-50 mt-2 w-72 rounded-lg border border-[#e5e5e5] bg-white shadow-lg">
+                <div className="fixed inset-x-4 top-16 z-50 rounded-lg border border-[#e5e5e5] bg-white shadow-lg sm:absolute sm:inset-x-auto sm:end-0 sm:top-full sm:mt-2 sm:w-72">
                   <div className="border-b border-[#e5e5e5] px-4 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-[#9a9a9a]">Notificaciones</div>
                   {notis.length === 0 ? (
                     <p className="px-4 py-6 text-center text-sm text-[#9a9a9a]">Sin notificaciones.</p>
@@ -207,7 +208,7 @@ export function AdminDashboardPage({ email, onLogout }: { email?: string | null;
           </div>
         </header>
 
-        <main className="flex-1 space-y-6 p-6">
+        <main className="min-w-0 flex-1 space-y-6 p-4 sm:p-6">
           {active === 'mantenedores' ? <MantenedoresPage /> : active === 'configuracion' ? <ConfiguracionPage /> : active === 'eventos' ? <EventosAdminPage onChanged={retry} /> : active === 'inscritos' ? <AdminEnrollments refreshKey={inscritosVersion} onChanged={retry} /> : <>
           {loading && <p className="text-sm text-[#6b6b6b]">Cargando panel...</p>}
 

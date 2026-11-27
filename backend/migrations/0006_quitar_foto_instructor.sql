@@ -1,0 +1,1 @@
+ALTER TABLE `instructores` DROP COLUMN `foto_url`;

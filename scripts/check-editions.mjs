@@ -13,7 +13,8 @@ try {
   }
   for (const file of (await readdir('backend/migrations')).filter(file => file.endsWith('.sql') && !file.startsWith('0004')).sort()) await executeFile(`backend/migrations/${file}`);
   await db.prepare("INSERT INTO user(id,name,email,email_verified,created_at,updated_at) VALUES('owner','Dueño de prueba','owner@example.com',0,unixepoch(),unixepoch())").run();
-  await db.prepare("INSERT INTO tipo_evento(id,nombre,requiere_pago) VALUES(1,'Curso',1),(2,'Evento',0)").run();
+  // La migración 0005 ya crea Cata; estos IDs pertenecen únicamente a la D1 temporal.
+  await db.prepare("INSERT OR REPLACE INTO tipo_evento(id,nombre,requiere_pago) VALUES(1,'Curso',1),(2,'Evento',0)").run();
   await db.prepare("INSERT INTO ubicaciones(id,nombre) VALUES(1,'Café de prueba')").run();
   await db.prepare("INSERT INTO eventos(id,tipo_evento_id,ubicacion_id,nombre,precio,cupo_maximo,estado) VALUES(1,1,1,'Master Class',65000,1,'ABIERTO'),(2,1,1,'Intensivo',220000,2,'ABIERTO'),(3,2,1,'Cata',0,1,'ABIERTO'),(4,1,1,'Antigua con fechas alternativas',65000,3,'ABIERTO'),(5,1,1,'Antigua de una fecha',65000,3,'ABIERTO')").run();
   await db.prepare("INSERT INTO fechas(id,evento_id,fecha,horario) VALUES(1,1,'2026-12-14','10:00-12:00'),(2,1,'2026-12-21','09:00-11:00'),(3,2,'2026-12-07','09:00-15:30'),(4,2,'2026-12-08','09:00-15:30'),(5,3,'2026-12-28','16:00-18:00'),(6,4,'2026-12-14','10:00-12:00'),(7,4,'2026-12-21','10:00-12:00'),(8,5,'2026-12-14','10:00-12:00')").run();

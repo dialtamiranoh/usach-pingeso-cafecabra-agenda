@@ -43,6 +43,20 @@
       "when": 1794691561114,
       "tag": "0005_tipo_evento_cata",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1795696176183,
+      "tag": "0006_quitar_foto_instructor",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1795696713166,
+      "tag": "0007_biblioteca_imagenes",
+      "breakpoints": true
     }
   ]
 }

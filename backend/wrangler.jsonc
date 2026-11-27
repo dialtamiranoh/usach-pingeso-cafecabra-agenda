@@ -48,7 +48,8 @@
     {
       "binding": "R2_PAGOS",
       "bucket_name": "cafecabra-pagos"
-    }
+    },
+    { "binding": "R2_MEDIA", "bucket_name": "cafecabra-imagenes" }
   ],
   "d1_databases": [
     {
@@ -82,7 +83,8 @@
         {
           "binding": "R2_PAGOS",
           "bucket_name": "cafecabra-pagos"
-        }
+        },
+        { "binding": "R2_MEDIA", "bucket_name": "cafecabra-imagenes-dev" }
       ],
       "d1_databases": [
         {
@@ -116,7 +118,8 @@
         {
           "binding": "R2_PAGOS",
           "bucket_name": "cafecabra-pagos"
-        }
+        },
+        { "binding": "R2_MEDIA", "bucket_name": "cafecabra-imagenes-local" }
       ],
       "d1_databases": [
         {

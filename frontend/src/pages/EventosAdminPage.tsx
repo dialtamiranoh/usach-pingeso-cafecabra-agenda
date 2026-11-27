@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { EstadoBadge } from '../components/EstadoBadge';
 import { ActionButton } from '../components/ActionButton';
+import { EventImages, type SelectedImage } from '../features/admin/EventImages';
 import { listarMantenedor, type Registro } from '../features/admin/mantenedores';
 import {
   type EventoResumen, type EventoDetalle, type EventoPayload,
@@ -27,6 +28,8 @@ interface EdicionForm {
   jornadas: JornadaForm[];
 }
 interface EventoForm {
+  imagenes: SelectedImage[];
+  imagenesModificadas: boolean;
   tipoEventoId: string;
   ubicacionId: string;
   nombre: string;
@@ -52,6 +55,7 @@ function formularioVacio(): EventoForm {
     tipoEventoId: '', ubicacionId: '', nombre: '', descripcion: '', precio: '0', cupoMaximo: '',
     controlaCupo: true, incluyeCertificado: false, incluye: '', estado: 'ABIERTO',
     instructorIds: [], opcionAlimentariaIds: [], ediciones: [nuevaEdicion()],
+    imagenes: [], imagenesModificadas: true,
   };
 }
 
@@ -60,6 +64,7 @@ function formularioVacio(): EventoForm {
 function formularioDesdeEvento(evento: EventoDetalle): EventoForm {
   return {
     tipoEventoId: String(evento.tipoEventoId),
+    imagenes: evento.imagenes ?? [], imagenesModificadas: false,
     ubicacionId: String(evento.ubicacionId),
     nombre: evento.nombre,
     descripcion: evento.descripcion ?? '',
@@ -127,6 +132,7 @@ function construirPayload(form: EventoForm, exigePago: boolean): { payload?: Eve
       incluyeCertificado: exigePago && form.incluyeCertificado,
       incluye: form.incluye.trim() || null,
       instructorIds: form.instructorIds,
+      ...(form.imagenesModificadas ? { imagenIds: form.imagenes.map(image => image.id!) } : {}),
       opcionAlimentariaIds: form.opcionAlimentariaIds,
       ...(form.estado ? { estado: form.estado } : {}),
       ediciones,
@@ -307,7 +313,7 @@ export function EventosAdminPage({ onChanged }: { onChanged?: () => void } = {})
       {mensaje && <p className="rounded-md bg-[#e7f4ea] px-3 py-2 text-sm text-[#1a7f37]" role="status">{mensaje}</p>}
 
       {formAbierto && (
-        <form onSubmit={guardar} className="space-y-6 rounded-lg border border-[#e5e5e5] bg-white p-6">
+        <form onSubmit={guardar} className="min-w-0 space-y-6 rounded-lg border border-[#e5e5e5] bg-white p-4 sm:p-6">
           <h3 className="text-sm font-semibold text-[#111111]">{editId === null ? 'Nuevo evento' : 'Editar evento'}</h3>
 
           {/* Datos generales */}
@@ -398,6 +404,8 @@ export function EventosAdminPage({ onChanged }: { onChanged?: () => void } = {})
             </fieldset>
           </div>
 
+          <EventImages images={form.imagenes} disabled={guardando} onChange={imagenes => setForm(prev => ({ ...prev, imagenes, imagenesModificadas: true }))} />
+
           {/* Ediciones y jornadas */}
           <div className="space-y-3">
             <div>
@@ -411,7 +419,7 @@ export function EventosAdminPage({ onChanged }: { onChanged?: () => void } = {})
                     <p className="text-sm font-medium text-[#111111]">Edición {indiceEdicion + 1}</p>
                     {edicion.cuposOcupados > 0 && <p className="text-xs text-[#6b6b6b]">{edicion.cuposOcupados} cupos ocupados</p>}
                   </div>
-                  <div className="flex items-end gap-3">
+                  <div className="flex min-w-0 flex-wrap items-end gap-3">
                     <div>
                       <label className="block text-xs font-medium text-[#111111]" htmlFor={`edicion-cupo-${indiceEdicion}`}>Cupo de la edición</label>
                       <input id={`edicion-cupo-${indiceEdicion}`} type="number" min={1} step={1} placeholder="Igual al evento"

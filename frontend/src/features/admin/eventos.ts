@@ -39,6 +39,7 @@ export interface EdicionDetalle {
 
 // Evento completo (GET /api/admin/eventos/:id), con el cual se llena el formulario de edición.
 export interface EventoDetalle {
+  imagenes: { id: string | null; url: string }[];
   id: number;
   tipoEventoId: number;
   ubicacionId: number;
@@ -58,6 +59,7 @@ export interface EventoDetalle {
 // Cuerpo que se envía al crear o editar. Una edición sin id se crea como nueva, y en la
 // edición del evento las ediciones existentes que no se envían se eliminan en el backend.
 export interface EventoPayload {
+  imagenIds?: string[];
   tipoEventoId: number;
   ubicacionId: number;
   nombre: string;

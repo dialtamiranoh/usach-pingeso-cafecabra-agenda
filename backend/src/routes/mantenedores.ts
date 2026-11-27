@@ -83,7 +83,7 @@ mantenedorRoutes.get('/admin/mantenedores/tipos-evento', async c => {
 mantenedorRoutes.get('/admin/mantenedores/instructores', async c => {
   const db = createDb(c.env.cafe_cabra_agenda_db);
   const filas = await db.select().from(instructores).orderBy(instructores.nombre);
-  return c.json(filas.map(i => ({ id: i.id, nombre: i.nombre, bio: i.bio, fotoUrl: i.fotoUrl, email: i.email, activo: i.activo })));
+  return c.json(filas.map(i => ({ id: i.id, nombre: i.nombre, bio: i.bio, email: i.email, activo: i.activo })));
 });
 
 mantenedorRoutes.post('/admin/mantenedores/instructores', async c => {
@@ -92,9 +92,9 @@ mantenedorRoutes.post('/admin/mantenedores/instructores', async c => {
   const nombre = texto(b?.nombre);
   if (nombre.length < 2) return c.json({ error: 'El nombre es obligatorio.' }, 400);
   const [fila] = await db.insert(instructores).values({
-    nombre, bio: textoOpcional(b?.bio), fotoUrl: textoOpcional(b?.fotoUrl), email: textoOpcional(b?.email), ...audit(c),
+    nombre, bio: textoOpcional(b?.bio), email: textoOpcional(b?.email), ...audit(c),
   }).returning();
-  return c.json({ id: fila.id, nombre: fila.nombre, bio: fila.bio, fotoUrl: fila.fotoUrl, email: fila.email, activo: fila.activo }, 201);
+  return c.json({ id: fila.id, nombre: fila.nombre, bio: fila.bio, email: fila.email, activo: fila.activo }, 201);
 });
 
 mantenedorRoutes.patch('/admin/mantenedores/instructores/:id', async c => {
@@ -104,12 +104,11 @@ mantenedorRoutes.patch('/admin/mantenedores/instructores/:id', async c => {
   const cambios: Partial<typeof instructores.$inferInsert> = audit(c);
   if (typeof b?.nombre === 'string') { if (texto(b.nombre).length < 2) return c.json({ error: 'Nombre inválido.' }, 400); cambios.nombre = texto(b.nombre); }
   if (b && 'bio' in b) cambios.bio = textoOpcional(b.bio);
-  if (b && 'fotoUrl' in b) cambios.fotoUrl = textoOpcional(b.fotoUrl);
   if (b && 'email' in b) cambios.email = textoOpcional(b.email);
   if (typeof b?.activo === 'boolean') cambios.activo = b.activo;
   const [fila] = await db.update(instructores).set(cambios).where(eq(instructores.id, id)).returning();
   if (!fila) return c.json({ error: 'No encontrado.' }, 404);
-  return c.json({ id: fila.id, nombre: fila.nombre, bio: fila.bio, fotoUrl: fila.fotoUrl, email: fila.email, activo: fila.activo });
+  return c.json({ id: fila.id, nombre: fila.nombre, bio: fila.bio, email: fila.email, activo: fila.activo });
 });
 
 /* ───────── Opciones alimentarias ───────── */

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { EstadoBadge } from '../components/EstadoBadge';
 import { ActionButton } from '../components/ActionButton';
+import { ImageLibrary } from '../features/admin/ImageLibrary';
 
 import {
   MANTENEDORES, type TipoMantenedor, type Registro,
@@ -10,6 +11,7 @@ import {
 // Pantalla de mantenedores (RF-31): una pestaña por catálogo, con CRUD y baja lógica.
 export function MantenedoresPage() {
   const [tipoActivo, setTipoActivo] = useState<TipoMantenedor>('ubicaciones');
+  const [library, setLibrary] = useState(false);
   const def = MANTENEDORES.find(m => m.tipo === tipoActivo)!;
 
   const [registros, setRegistros] = useState<Registro[]>([]);
@@ -83,7 +85,7 @@ export function MantenedoresPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-lg font-semibold text-[#111111]">Mantenedores</h1>
-        <p className="text-sm text-[#6b6b6b]">Catálogos que alimentan la creación de eventos. La baja es lógica: no se eliminan, se desactivan.</p>
+        <p className="text-sm text-[#6b6b6b]">Administra los catálogos y la biblioteca de imágenes para tus cursos y eventos.</p>
       </div>
 
       <div className="flex flex-wrap gap-2 border-b border-[#e5e5e5]">
@@ -91,23 +93,25 @@ export function MantenedoresPage() {
           <button
             key={m.tipo}
             type="button"
-            onClick={() => setTipoActivo(m.tipo)}
+            onClick={() => { setLibrary(false); setTipoActivo(m.tipo); }}
             className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
-              tipoActivo === m.tipo ? 'border-[#e6bb08] text-[#111111]' : 'border-transparent text-[#6b6b6b] hover:text-[#111111]'
+              !library && tipoActivo === m.tipo ? 'border-[#e6bb08] text-[#111111]' : 'border-transparent text-[#6b6b6b] hover:text-[#111111]'
             }`}
           >
             {m.titulo}
           </button>
         ))}
+        <button type="button" onClick={() => setLibrary(true)} className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium ${library ? 'border-[#e6bb08]' : 'border-transparent text-[#6b6b6b]'}`}>Biblioteca de imágenes</button>
       </div>
 
-      <div className="flex items-center justify-between">
+      {library ? <ImageLibrary /> : <>
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-sm font-medium text-[#111111]">{def.titulo}</h2>
         <ActionButton variant="crear" label={`Nueva ${def.singular}`} onClick={abrirNuevo} />
       </div>
 
       {formAbierto && (
-        <form onSubmit={guardar} className="space-y-4 rounded-lg border border-[#e5e5e5] bg-white p-6">
+        <form onSubmit={guardar} className="min-w-0 space-y-4 rounded-lg border border-[#e5e5e5] bg-white p-4 sm:p-6">
           <h3 className="text-sm font-semibold text-[#111111]">{editId === null ? `Nueva ${def.singular}` : `Editar ${def.singular}`}</h3>
           {def.campos.map(campo => (
             <div key={campo.clave}>
@@ -181,6 +185,7 @@ export function MantenedoresPage() {
           </div>
         )}
       </div>
+      </>}
     </div>
   );
 }

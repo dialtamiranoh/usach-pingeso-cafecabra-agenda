@@ -25,8 +25,8 @@ async function api<T>(url: string, options: RequestInit = {}): Promise<T> {
 
 // Fila de un dl: término a la izquierda, valor a la derecha.
 function Dato({ termino, children }: { termino: string; children: ReactNode }) {
-  return <div className="grid grid-cols-[minmax(0,11rem)_1fr] gap-2 py-1.5">
-    <dt className="text-[#6b6b6b]">{termino}</dt><dd className="text-[#111111]">{children}</dd>
+  return <div className="grid min-w-0 gap-1 py-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:gap-2">
+    <dt className="text-[#6b6b6b]">{termino}</dt><dd className="min-w-0 [overflow-wrap:anywhere] text-[#111111]">{children}</dd>
   </div>;
 }
 
@@ -61,14 +61,14 @@ export function AdminEnrollments({ refreshKey, onChanged }: { refreshKey: number
     </div>
 
     <form className="flex flex-wrap items-end gap-3 rounded-lg border border-[#e5e5e5] bg-white p-4" onSubmit={event => { event.preventDefault(); setPage(1); setQuery(search.trim()); }}>
-      <label className="flex flex-col gap-1 text-sm">
+      <label className="flex min-w-0 max-w-full flex-col gap-1 text-sm">
         <span className="font-medium text-[#111111]">Estado</span>
         <select className={CAMPO} value={status} onChange={event => { setStatus(event.target.value); setPage(1); }}>
           <option value="">Todas las inscripciones</option>
           {Object.entries(LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select>
       </label>
-      <label className="flex min-w-[240px] flex-1 flex-col gap-1 text-sm">
+      <label className="flex min-w-0 basis-full flex-1 flex-col gap-1 text-sm sm:min-w-[240px] sm:basis-auto">
         <span className="font-medium text-[#111111]">Buscar</span>
         <input className={CAMPO} value={search} maxLength={120} onChange={event => setSearch(event.target.value)} placeholder="Nombre, correo, actividad o código" />
       </label>
@@ -108,9 +108,9 @@ export function AdminEnrollments({ refreshKey, onChanged }: { refreshKey: number
         </table>
       </div>
       {!data.items.length && !loading && <p className="text-sm text-[#9a9a9a]">No hay inscripciones para esta búsqueda.</p>}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <button type="button" className={BTN_UTIL} disabled={page === 1 || loading} onClick={() => setPage(value => value - 1)}><FaChevronLeft aria-hidden="true" /> Anterior</button>
-        <span className="text-sm text-[#6b6b6b]">Página {page} de {Math.max(1, Math.ceil(data.total / data.pageSize))}</span>
+        <span className="order-first w-full text-center text-sm text-[#6b6b6b] sm:order-none sm:w-auto">Página {page} de {Math.max(1, Math.ceil(data.total / data.pageSize))}</span>
         <button type="button" className={BTN_UTIL} disabled={page * data.pageSize >= data.total || loading} onClick={() => setPage(value => value + 1)}>Siguiente <FaChevronRight aria-hidden="true" /></button>
       </div>
     </div>}
@@ -185,12 +185,12 @@ function EnrollmentDetail({ id, onClose, onChanged }: { id: number; onClose: () 
   function choose(value: 'CONFIRMAR' | 'CANCELAR') { setAction(value); setError(''); setMessage(''); setVerified(false); setReason(''); requestId.current = crypto.randomUUID(); }
 
   return <dialog ref={dialog} aria-labelledby="enrollment-detail-title" onClose={onClose} onCancel={event => { if (pending) event.preventDefault(); }}
-    className="m-auto w-full max-w-2xl rounded-lg bg-white p-0 backdrop:bg-black/50">
-    <div className="max-h-[85vh] space-y-5 overflow-y-auto p-6">
+    className="m-auto w-[calc(100%-2rem)] max-w-2xl rounded-lg bg-white p-0 backdrop:bg-black/50">
+    <div className="max-h-[85dvh] space-y-5 overflow-y-auto p-4 sm:p-6">
       <div className="flex items-start justify-between gap-4">
         <h2 id="enrollment-detail-title" className="text-lg font-semibold text-[#111111]">Detalle de inscripción</h2>
         <button type="button" aria-label="Cerrar detalle" disabled={pending} onClick={() => dialog.current?.close()}
-          className="rounded-md p-1 text-[#6b6b6b] transition-colors hover:bg-[#f5f5f4] disabled:opacity-50"><FaXmark aria-hidden="true" className="size-5" /></button>
+          className="flex size-11 shrink-0 items-center justify-center rounded-md p-1 text-[#6b6b6b] transition-colors hover:bg-[#f5f5f4] disabled:opacity-50"><FaXmark aria-hidden="true" className="size-5" /></button>
       </div>
 
       {loading && <p role="status" className="text-sm text-[#6b6b6b]">Cargando detalle...</p>}

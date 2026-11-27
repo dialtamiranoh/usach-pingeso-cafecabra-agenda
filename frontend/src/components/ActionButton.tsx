@@ -56,7 +56,7 @@ export function ActionButton({ variant, label, iconOnly, size = 'md', loading, d
   const def = VARIANTES[variant];
   const texto = label ?? def.label;
   const dims = size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm';
-  const base = 'inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+  const base = 'inline-flex max-w-full min-h-11 items-center justify-center gap-2 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
   return (
     <button
       {...rest}
@@ -65,7 +65,7 @@ export function ActionButton({ variant, label, iconOnly, size = 'md', loading, d
       aria-label={iconOnly ? texto : undefined}
       className={`${base} ${dims} ${iconOnly ? '!px-2' : ''} ${TONO[def.tono]} ${className}`}
     >
-      <def.Icon aria-hidden="true" className={size === 'sm' ? 'size-3.5' : 'size-4'} />
+      <def.Icon aria-hidden="true" className={size === 'sm' ? 'size-3.5 shrink-0' : 'size-4 shrink-0'} />
       {!iconOnly && (loading ? 'Guardando...' : texto)}
     </button>
   );

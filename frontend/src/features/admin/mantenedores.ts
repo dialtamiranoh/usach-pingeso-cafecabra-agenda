@@ -31,7 +31,6 @@ export const MANTENEDORES: MantenedorDef[] = [
     campos: [
       { clave: 'nombre', label: 'Nombre', tipo: 'texto', requerido: true },
       { clave: 'email', label: 'Correo', tipo: 'texto' },
-      { clave: 'fotoUrl', label: 'URL de foto', tipo: 'texto' },
       { clave: 'bio', label: 'Biografía', tipo: 'textarea' },
     ],
   },

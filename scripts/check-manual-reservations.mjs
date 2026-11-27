@@ -22,7 +22,8 @@ try {
   const login = await auth.api.signInEmail({ body: { email: 'owner@example.com', password: 'solo-prueba-temporal' }, asResponse: true });
   const cookie = login.headers.getSetCookie().map(value => value.split(';')[0]).join('; ');
   assert.ok(cookie);
-  await db.prepare("INSERT INTO tipo_evento(id,nombre,requiere_pago) VALUES(1,'Curso',1),(2,'Evento',0)").run();
+  // La migración 0005 ya crea Cata; estos IDs pertenecen únicamente a la D1 temporal.
+  await db.prepare("INSERT OR REPLACE INTO tipo_evento(id,nombre,requiere_pago) VALUES(1,'Curso',1),(2,'Evento',0)").run();
   await db.prepare("INSERT INTO ubicaciones(id,nombre) VALUES(1,'Café de prueba')").run();
   await db.prepare("INSERT INTO eventos(id,tipo_evento_id,ubicacion_id,nombre,precio,cupo_maximo,estado) VALUES(1,1,1,'Latte Art',65000,20,'ABIERTO'),(2,2,1,'Cata gratuita',0,20,'ABIERTO')").run();
   for (let id = 1; id <= 8; id++) {

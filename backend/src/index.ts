@@ -11,6 +11,7 @@ import { adminEnrollmentRoutes } from './routes/admin-enrollments';
 export { AgendaHub } from './realtime/AgendaHub';
 import { mantenedorRoutes } from './routes/mantenedores';
 import { eventoAdminRoutes } from './routes/eventos-admin';
+import { imageLibraryRoutes } from './routes/image-library';
 
 
 const app = new Hono<{ Bindings: AppBindings }>();
@@ -20,6 +21,7 @@ app.route('/api', adminRoutes);
 app.route('/api', mantenedorRoutes);
 app.route('/api', adminEnrollmentRoutes);
 app.route('/api', eventoAdminRoutes);
+app.route('/api', imageLibraryRoutes);
 
 app.get('/api/health', async c => {
   const body = await checkHealth(c.env);

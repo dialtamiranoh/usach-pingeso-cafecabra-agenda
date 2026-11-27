@@ -12,7 +12,7 @@ try {
     const sql = await readFile(`backend/migrations/${file}`, 'utf8');
     await db.batch(sql.split('--> statement-breakpoint').filter(part => part.trim()).map(part => db.prepare(part)));
   }
-  await db.prepare("INSERT INTO tipo_evento (id,nombre,requiere_pago) VALUES (1,'Evento',0),(2,'Curso',1)").run();
+  await db.prepare("INSERT OR REPLACE INTO tipo_evento (id,nombre,requiere_pago) VALUES (1,'Evento',0),(2,'Curso',1)").run();
   await db.prepare("INSERT INTO ubicaciones (id,nombre) VALUES (1,'Prueba')").run();
   await db.prepare("INSERT INTO eventos (id,tipo_evento_id,ubicacion_id,nombre,precio,cupo_maximo,estado) VALUES (1,1,1,'Gratuito',0,1,'ABIERTO'),(2,2,1,'Pago',1000,4,'ABIERTO'),(3,1,1,'Cerrado',0,4,'CERRADO'),(4,1,1,'Concurrente',0,1,'ABIERTO')").run();
   await db.prepare("INSERT INTO fechas (evento_id,fecha,horario) VALUES (1,'2026-11-28','16:00-18:00'),(2,'2026-11-28','16:00-18:00'),(3,'2026-11-28','16:00-18:00'),(4,'2026-11-28','16:00-18:00')").run();

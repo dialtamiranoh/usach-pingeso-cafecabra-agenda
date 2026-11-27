@@ -104,3 +104,7 @@ La sección **Inscritos** de `/admin` permite consultar todas las inscripciones,
 ## Ediciones y cupos por fecha
 
 La migración `0004_far_ogun.sql` relaciona cada reserva con la edición elegida. Las fechas alternativas tienen cupos independientes; las jornadas de una misma edición comparten cupos. Las reservas anteriores con varias ediciones posibles requieren asignación manual antes de confirmar. Ver `docs/ediciones-inscripciones.md`. La prueba `node scripts/check-editions.mjs` usa D1 temporal, sin modificar Cloudflare ni enviar correos reales.
+
+## Biblioteca de imágenes
+
+Mantenedores incluye una biblioteca con carga por botón o arrastre, optimización a WebP y eliminación protegida de imágenes en uso. En Eventos se pueden seleccionar hasta tres imágenes y definir la principal. La migración `0007_biblioteca_imagenes.sql` agrega la biblioteca y su relación con `evento_media`; las fotos anteriores se conservan hasta reemplazarlas explícitamente. En local los archivos usan R2 simulado. Antes de publicar en dev hay que crear o verificar el bucket `cafecabra-imagenes-dev` para la conexión `R2_MEDIA`. Ver `docs/biblioteca-imagenes.md`. Prueba aislada: `node scripts/check-image-library.mjs`.

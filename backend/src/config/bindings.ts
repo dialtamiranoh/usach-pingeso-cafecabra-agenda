@@ -1,6 +1,7 @@
 import type { AgendaHub } from '../realtime/AgendaHub';
 
 export type AppBindings = CloudflareEnv & {
+  R2_MEDIA: R2Bucket;
   RESEND_API_KEY?: string;
   BETTER_AUTH_SECRET?: string;
   // Token de un solo uso para sembrar el primer administrador (endpoint bootstrap).

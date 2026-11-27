@@ -14,6 +14,8 @@ import {
   eventoOpcionesAlimentarias,
   ediciones,
   fechas,
+  eventoMedia,
+  bibliotecaImagenes,
 } from '../db/schema';
 
 // Gestión de cursos y catas desde el panel de administración, épica E1:
@@ -29,6 +31,12 @@ import {
 type Entorno = { Bindings: AppBindings; Variables: { userId: string } };
 
 export const eventoAdminRoutes = new Hono<Entorno>();
+eventoAdminRoutes.onError((error, c) => {
+  if (/Imagen no disponible|Hasta tres imagenes/.test(error.message + String(error.cause ?? '')))
+    return c.json({ error: 'Las imágenes cambiaron mientras guardabas. Actualiza la selección de la biblioteca.' }, 409);
+  console.error('Gestión de eventos:', error.message);
+  return c.json({ error: 'No pudimos guardar el evento. Intenta nuevamente.' }, 500);
+});
 
 /* ───────── Guard de sesión ───────── */
 
@@ -42,6 +50,11 @@ async function exigirSesion(c: Context<Entorno>, next: () => Promise<void>) {
     sesion = null;
   }
   if (!sesion) return c.json({ error: 'No autorizado' }, 401);
+  if (!['GET', 'HEAD'].includes(c.req.method)) {
+    const origin = c.req.header('origin');
+    if (origin && !c.env.BETTER_AUTH_TRUSTED_ORIGINS.split(',').map(value => value.trim()).includes(origin))
+      return c.json({ error: 'Origen no autorizado.' }, 403);
+  }
   c.set('userId', sesion.user.id);
   await next();
 }
@@ -82,6 +95,7 @@ type EventoEntrada = {
   instructorIds: number[];
   opcionAlimentariaIds: number[];
   ediciones: EdicionEntrada[];
+  imagenIds?: string[];
 };
 // Estados que el administrador puede elegir desde el formulario. El cierre usa su propia ruta.
 type EstadoFormulario = 'BORRADOR' | 'ABIERTO';
@@ -112,6 +126,12 @@ function listaDeIds(valor: unknown): number[] | null {
 // se revisan después en validarContraBase.
 function leerEvento(cuerpo: unknown): Resultado<EventoEntrada> {
   const b = (cuerpo ?? {}) as Record<string, unknown>;
+  let imagenIds: string[] | undefined;
+  if ('imagenIds' in b) {
+    if (!Array.isArray(b.imagenIds) || b.imagenIds.length > 3 || b.imagenIds.some(id => typeof id !== 'string' || !/^[a-zA-Z0-9-]{1,80}$/.test(id)) || new Set(b.imagenIds).size !== b.imagenIds.length)
+      return { ok: false, error: 'Selecciona hasta tres imágenes diferentes de la biblioteca.' };
+    imagenIds = b.imagenIds as string[];
+  }
 
   const tipoEventoId = enteroPositivo(b.tipoEventoId);
   if (tipoEventoId === null) return { ok: false, error: 'Se debe seleccionar el tipo de evento.' };
@@ -199,6 +219,7 @@ function leerEvento(cuerpo: unknown): Resultado<EventoEntrada> {
       instructorIds,
       opcionAlimentariaIds,
       ediciones: edicionesLeidas,
+      imagenIds,
     },
   };
 }
@@ -210,6 +231,11 @@ function leerEvento(cuerpo: unknown): Resultado<EventoEntrada> {
 // conviven los tipos Curso, Cata y Evento, por lo que comparar nombres dejaría fuera a los
 // tipos sin pago previo que no se llamen Cata.
 async function validarContraBase(db: ReturnType<typeof createDb>, datos: EventoEntrada): Promise<string | null> {
+  if (datos.imagenIds?.length) {
+    const images = await db.select({ id: bibliotecaImagenes.id }).from(bibliotecaImagenes)
+      .where(and(inArray(bibliotecaImagenes.id, datos.imagenIds), eq(bibliotecaImagenes.estado, 'ACTIVA')));
+    if (images.length !== datos.imagenIds.length) return 'Una imagen ya no está disponible en la biblioteca. Actualiza la selección.';
+  }
   const tipo = await db.select().from(tipoEvento).where(eq(tipoEvento.id, datos.tipoEventoId)).get();
   if (!tipo || !tipo.activo) return 'El tipo de evento seleccionado no existe o está inactivo.';
 
@@ -290,6 +316,8 @@ async function cargarEvento(c: Context<Entorno>, id: number) {
     estado: evento.estado,
     instructorIds: relInstructores.map(r => r.id),
     opcionAlimentariaIds: relOpciones.map(r => r.id),
+    imagenes: await db.select({ id: eventoMedia.imagenId, url: eventoMedia.url }).from(eventoMedia)
+      .where(and(eq(eventoMedia.eventoId, id), eq(eventoMedia.tipo, 'IMAGEN'))).orderBy(eventoMedia.orden, eventoMedia.id),
     ediciones: filasEdiciones.results.map(d => ({
       id: d.id,
       cupoMaximo: d.cupo_maximo,
@@ -400,6 +428,9 @@ eventoAdminRoutes.post('/admin/eventos', async c => {
     }
   }
 
+  for (const [orden, imagenId] of (datos.imagenIds ?? []).entries()) {
+    instrucciones.push(db.insert(eventoMedia).values({ eventoId: idEventoNuevo, imagenId, url: '/api/imagenes/' + imagenId, tipo: 'IMAGEN', orden, esPrincipal: orden === 0, ...marca }));
+  }
   const resultados = await db.batch(instrucciones as [BatchItem<'sqlite'>, ...BatchItem<'sqlite'>[]]);
   const [{ id }] = resultados[0] as { id: number }[];
   return c.json(await cargarEvento(c, id), 201);
@@ -488,6 +519,13 @@ eventoAdminRoutes.patch('/admin/eventos/:id', async c => {
     }
   }
 
+  // Omitir imagenIds conserva las fotos anteriores; una selección explícita las reemplaza.
+  if (datos.imagenIds !== undefined) {
+    instrucciones.push(db.delete(eventoMedia).where(and(eq(eventoMedia.eventoId, id), eq(eventoMedia.tipo, 'IMAGEN'))));
+    for (const [orden, imagenId] of datos.imagenIds.entries()) {
+      instrucciones.push(db.insert(eventoMedia).values({ eventoId: id, imagenId, url: '/api/imagenes/' + imagenId, tipo: 'IMAGEN', orden, esPrincipal: orden === 0, ...marca }));
+    }
+  }
   await db.batch(instrucciones as [BatchItem<'sqlite'>, ...BatchItem<'sqlite'>[]]);
   return c.json(await cargarEvento(c, id));
 });
